@@ -1,17 +1,32 @@
-import { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState, useRef } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { AppHeader } from "@/components/layout/app-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Session } from "@shared/schema";
-import { Loader2 } from "lucide-react";
+import { Loader2, Copy, Globe, Lock } from "lucide-react";
 import { wsManager } from "@/lib/websocket";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 export default function HomePage() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [, navigate] = useLocation();
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+  const [newProjectName, setNewProjectName] = useState("");
+  const [isPublic, setIsPublic] = useState(false);
+  const [projectLanguage, setProjectLanguage] = useState("javascript");
+  const [newSessionId, setNewSessionId] = useState<number | null>(null);
+  const [sharingUrl, setSharingUrl] = useState("");
+  const urlInputRef = useRef<HTMLInputElement>(null);
   
   // Fetch user's sessions
   const { data: sessions, isLoading } = useQuery<Session[]>({
@@ -22,6 +37,41 @@ export default function HomePage() {
       return response.json();
     },
     enabled: !!user,
+  });
+  
+  // Create session mutation
+  const createSessionMutation = useMutation({
+    mutationFn: async (sessionData: { name: string; isPublic: boolean; language: string }) => {
+      if (!user) throw new Error("User not authenticated");
+      
+      const response = await apiRequest("POST", "/api/sessions", {
+        ...sessionData,
+        ownerId: user.id
+      });
+      
+      return await response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/sessions"] });
+      
+      setNewSessionId(data.id);
+      const url = `${window.location.origin}/playground/${data.id}`;
+      setSharingUrl(url);
+      
+      setIsCreateDialogOpen(false);
+      if (data.isPublic) {
+        setIsShareDialogOpen(true);
+      } else {
+        navigate(`/playground/${data.id}`);
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Error creating project",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   });
   
   // Connect to WebSocket when the page loads
@@ -38,8 +88,40 @@ export default function HomePage() {
     };
   }, [user]);
   
-  const createNewSession = () => {
-    navigate("/playground");
+  const openCreateDialog = () => {
+    setNewProjectName("");
+    setIsPublic(false);
+    setProjectLanguage("javascript");
+    setIsCreateDialogOpen(true);
+  };
+  
+  const handleCreateSession = () => {
+    if (!newProjectName.trim()) {
+      toast({
+        title: "Project name required",
+        description: "Please enter a name for your project",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    createSessionMutation.mutate({
+      name: newProjectName,
+      isPublic,
+      language: projectLanguage
+    });
+  };
+  
+  const copyToClipboard = () => {
+    if (urlInputRef.current) {
+      urlInputRef.current.select();
+      document.execCommand('copy');
+      
+      toast({
+        title: "URL copied to clipboard",
+        description: "Share this link with your collaborators",
+      });
+    }
   };
   
   // Format date to a readable string

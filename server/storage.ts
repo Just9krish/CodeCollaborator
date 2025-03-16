@@ -30,6 +30,7 @@ export interface IStorage {
   // Session operations
   getSession(id: number): Promise<Session | undefined>;
   getSessions(ownerId?: number): Promise<Session[]>;
+  getPublicSessions(): Promise<Session[]>;
   createSession(session: InsertSession): Promise<Session>;
   updateSession(id: number, session: Partial<InsertSession>): Promise<Session | undefined>;
   deleteSession(id: number): Promise<boolean>;
@@ -51,9 +52,24 @@ export interface IStorage {
   updateParticipant(id: number, participant: Partial<InsertSessionParticipant>): Promise<SessionParticipant | undefined>;
   removeParticipant(sessionId: number, userId: number): Promise<boolean>;
   
+  // Collaboration request operations
+  getCollaborationRequest(id: number): Promise<any | undefined>;
+  getCollaborationRequestsByUser(userId: number): Promise<any[]>;
+  getCollaborationRequestsBySession(sessionId: number): Promise<any[]>;
+  createCollaborationRequest(request: any): Promise<any>;
+  updateCollaborationRequest(id: number, requestData: Partial<any>): Promise<any | undefined>;
+  
   // Session Store for authentication
   sessionStore: session.SessionStore;
 }
+
+export type CollaborationRequest = {
+  id: number;
+  sessionId: number;
+  fromUserId: number;
+  status: string; // 'pending', 'accepted', 'rejected'
+  createdAt: Date;
+};
 
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
@@ -61,6 +77,7 @@ export class MemStorage implements IStorage {
   private files: Map<number, File>;
   private messages: Map<number, Message>;
   private participants: Map<number, SessionParticipant>;
+  private collaborationRequests: Map<number, CollaborationRequest>;
   sessionStore: session.SessionStore;
   
   private userIdCounter: number;
@@ -68,6 +85,7 @@ export class MemStorage implements IStorage {
   private fileIdCounter: number;
   private messageIdCounter: number;
   private participantIdCounter: number;
+  private collaborationRequestIdCounter: number;
 
   constructor() {
     this.users = new Map();
@@ -75,12 +93,14 @@ export class MemStorage implements IStorage {
     this.files = new Map();
     this.messages = new Map();
     this.participants = new Map();
+    this.collaborationRequests = new Map();
     
     this.userIdCounter = 1;
     this.sessionIdCounter = 1;
     this.fileIdCounter = 1;
     this.messageIdCounter = 1;
     this.participantIdCounter = 1;
+    this.collaborationRequestIdCounter = 1;
     
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000 // 24 hours
@@ -165,7 +185,8 @@ export class MemStorage implements IStorage {
         sessions: Array.from(this.sessions.values()),
         files: Array.from(this.files.values()),
         messages: Array.from(this.messages.values()),
-        participants: Array.from(this.participants.values())
+        participants: Array.from(this.participants.values()),
+        collaborationRequests: Array.from(this.collaborationRequests.values())
       };
       
       fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
@@ -350,6 +371,58 @@ export class MemStorage implements IStorage {
     this.participants.set(participant.id, participant);
     this.saveData();
     return true;
+  }
+  
+  // Public sessions operations
+  async getPublicSessions(): Promise<Session[]> {
+    return Array.from(this.sessions.values()).filter(session => session.isPublic);
+  }
+  
+  // Collaboration request operations
+  async getCollaborationRequest(id: number): Promise<CollaborationRequest | undefined> {
+    return this.collaborationRequests.get(id);
+  }
+  
+  async getCollaborationRequestsByUser(userId: number): Promise<CollaborationRequest[]> {
+    return Array.from(this.collaborationRequests.values())
+      .filter(request => request.fromUserId === userId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+  
+  async getCollaborationRequestsBySession(sessionId: number): Promise<CollaborationRequest[]> {
+    return Array.from(this.collaborationRequests.values())
+      .filter(request => request.sessionId === sessionId)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }
+  
+  async createCollaborationRequest(request: {sessionId: number, fromUserId: number, status?: string}): Promise<CollaborationRequest> {
+    const id = this.collaborationRequestIdCounter++;
+    const now = new Date();
+    const newRequest: CollaborationRequest = {
+      id,
+      sessionId: request.sessionId,
+      fromUserId: request.fromUserId,
+      status: request.status || 'pending',
+      createdAt: now
+    };
+    
+    this.collaborationRequests.set(id, newRequest);
+    this.saveData();
+    return newRequest;
+  }
+  
+  async updateCollaborationRequest(id: number, requestData: Partial<{status: string}>): Promise<CollaborationRequest | undefined> {
+    const request = this.collaborationRequests.get(id);
+    if (!request) return undefined;
+    
+    const updatedRequest: CollaborationRequest = {
+      ...request,
+      ...requestData
+    };
+    
+    this.collaborationRequests.set(id, updatedRequest);
+    this.saveData();
+    return updatedRequest;
   }
 }
 
