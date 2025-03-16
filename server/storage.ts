@@ -7,8 +7,18 @@ import {
 } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const MemoryStore = createMemoryStore(session);
+
+// Get current file's directory in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// File path for data persistence
+const DATA_FILE = path.join(__dirname, '..', 'data.json');
 
 // CRUD interface for our storage
 export interface IStorage {
@@ -75,6 +85,93 @@ export class MemStorage implements IStorage {
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000 // 24 hours
     });
+    
+    // Load previously saved data if available
+    this.loadData();
+  }
+  
+  // Load data from file
+  private loadData(): void {
+    try {
+      if (fs.existsSync(DATA_FILE)) {
+        console.log('Loading persisted data from', DATA_FILE);
+        const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+        
+        // Initialize maps with loaded data
+        if (data.users) {
+          data.users.forEach((user: User) => {
+            this.users.set(user.id, {
+              ...user,
+              // Convert string dates back to Date objects if needed
+              createdAt: user.createdAt ? new Date(user.createdAt) : undefined
+            });
+            this.userIdCounter = Math.max(this.userIdCounter, user.id + 1);
+          });
+        }
+        
+        if (data.sessions) {
+          data.sessions.forEach((session: Session) => {
+            this.sessions.set(session.id, {
+              ...session,
+              createdAt: new Date(session.createdAt)
+            });
+            this.sessionIdCounter = Math.max(this.sessionIdCounter, session.id + 1);
+          });
+        }
+        
+        if (data.files) {
+          data.files.forEach((file: File) => {
+            this.files.set(file.id, {
+              ...file,
+              createdAt: new Date(file.createdAt)
+            });
+            this.fileIdCounter = Math.max(this.fileIdCounter, file.id + 1);
+          });
+        }
+        
+        if (data.messages) {
+          data.messages.forEach((message: Message) => {
+            this.messages.set(message.id, {
+              ...message,
+              createdAt: new Date(message.createdAt)
+            });
+            this.messageIdCounter = Math.max(this.messageIdCounter, message.id + 1);
+          });
+        }
+        
+        if (data.participants) {
+          data.participants.forEach((participant: SessionParticipant) => {
+            this.participants.set(participant.id, {
+              ...participant,
+              joinedAt: new Date(participant.joinedAt)
+            });
+            this.participantIdCounter = Math.max(this.participantIdCounter, participant.id + 1);
+          });
+        }
+        
+        console.log('Data loaded successfully.');
+      }
+    } catch (error) {
+      console.error('Error loading data:', error);
+    }
+  }
+  
+  // Save data to file
+  private saveData(): void {
+    try {
+      // Convert maps to arrays for serialization
+      const data = {
+        users: Array.from(this.users.values()),
+        sessions: Array.from(this.sessions.values()),
+        files: Array.from(this.files.values()),
+        messages: Array.from(this.messages.values()),
+        participants: Array.from(this.participants.values())
+      };
+      
+      fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+    } catch (error) {
+      console.error('Error saving data:', error);
+    }
   }
 
   // User operations
@@ -92,6 +189,7 @@ export class MemStorage implements IStorage {
     const id = this.userIdCounter++;
     const user: User = { ...insertUser, id };
     this.users.set(id, user);
+    this.saveData();
     return user;
   }
 
@@ -117,6 +215,7 @@ export class MemStorage implements IStorage {
       createdAt: now
     };
     this.sessions.set(id, session);
+    this.saveData();
     return session;
   }
 
@@ -129,11 +228,14 @@ export class MemStorage implements IStorage {
       ...sessionData
     };
     this.sessions.set(id, updatedSession);
+    this.saveData();
     return updatedSession;
   }
 
   async deleteSession(id: number): Promise<boolean> {
-    return this.sessions.delete(id);
+    const result = this.sessions.delete(id);
+    if (result) this.saveData();
+    return result;
   }
 
   // File operations
@@ -156,6 +258,7 @@ export class MemStorage implements IStorage {
       createdAt: now
     };
     this.files.set(id, file);
+    this.saveData();
     return file;
   }
 
@@ -168,11 +271,14 @@ export class MemStorage implements IStorage {
       ...fileData
     };
     this.files.set(id, updatedFile);
+    this.saveData();
     return updatedFile;
   }
 
   async deleteFile(id: number): Promise<boolean> {
-    return this.files.delete(id);
+    const result = this.files.delete(id);
+    if (result) this.saveData();
+    return result;
   }
 
   // Message operations
@@ -191,6 +297,7 @@ export class MemStorage implements IStorage {
       createdAt: now
     };
     this.messages.set(id, message);
+    this.saveData();
     return message;
   }
 
@@ -214,6 +321,7 @@ export class MemStorage implements IStorage {
       joinedAt: now
     };
     this.participants.set(id, participant);
+    this.saveData();
     return participant;
   }
 
@@ -226,6 +334,7 @@ export class MemStorage implements IStorage {
       ...participantData
     };
     this.participants.set(id, updatedParticipant);
+    this.saveData();
     return updatedParticipant;
   }
 
@@ -239,6 +348,7 @@ export class MemStorage implements IStorage {
     // Just mark as inactive instead of deleting
     participant.isActive = false;
     this.participants.set(participant.id, participant);
+    this.saveData();
     return true;
   }
 }
