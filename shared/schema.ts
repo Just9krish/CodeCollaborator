@@ -15,6 +15,9 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  email: text("email").unique(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -32,6 +35,7 @@ export const sessions = pgTable("sessions", {
   language: text("language").notNull().default("javascript"),
   isPublic: boolean("is_public").notNull().default(false), // Changed to private by default
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 export const insertSessionSchema = createInsertSchema(sessions).pick({
@@ -48,6 +52,7 @@ export const collaborationRequests = pgTable("collaboration_requests", {
   fromUserId: integer("from_user_id").notNull(),
   status: text("status").notNull().default("pending"), // pending, accepted, rejected
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 // Type for selecting data from the table
@@ -77,6 +82,7 @@ export const files = pgTable("files", {
   content: text("content").notNull().default(""),
   sessionId: integer("session_id").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 export const insertFileSchema = createInsertSchema(files).pick({
@@ -94,6 +100,7 @@ export const messages = pgTable("messages", {
   userId: integer("user_id").notNull(),
   sessionId: integer("session_id").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 export const insertMessageSchema = createInsertSchema(messages).pick({

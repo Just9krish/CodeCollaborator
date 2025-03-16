@@ -539,7 +539,6 @@ export default function PlaygroundPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-900">
-      <AppHeader />
 
       {/* Session Controls */}
       <SessionControls
@@ -608,8 +607,8 @@ export default function PlaygroundPage() {
               <div
                 key={file.id}
                 className={`px-3 py-2 flex items-center border-r border-gray-700 cursor-pointer ${file.id === activeFileId
-                    ? "bg-gray-900 text-white"
-                    : "text-gray-400 hover:text-white"
+                  ? "bg-gray-900 text-white"
+                  : "text-gray-400 hover:text-white"
                   }`}
                 onClick={() => handleSelectFileTab(file.id)}
               >

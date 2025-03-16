@@ -197,7 +197,6 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-dark flex flex-col">
-      <AppHeader />
 
       <main className="flex-1 p-6">
         <div className="max-w-7xl mx-auto">
@@ -275,7 +274,7 @@ export default function HomePage() {
                       </CardHeader>
                       <CardContent className="text-gray-300">
                         <p className="text-sm">
-                          Last edited {formatDate(session.createdAt)}
+                          Last edited {formatDate(session.updatedAt)}
                         </p>
                       </CardContent>
                       <CardFooter className="pt-2 border-t border-gray-700">

@@ -25,6 +25,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
+import { features } from "@shared/constant";
 
 // Extend the insert schema with validation rules
 const loginSchema = insertUserSchema.extend({
@@ -121,39 +122,18 @@ export default function AuthPage() {
             Collaborative Code Playground
           </h2>
           <p className="text-gray-300 mb-6">
-            Write, edit, and execute code in real-time with developers around
-            the world. Seamlessly collaborate on coding projects with integrated
-            chat and debugging tools.
+            Write, edit, and execute code in real-time with developers around the
+            world. Seamlessly collaborate on coding projects with integrated chat
+            and debugging tools.
           </p>
           <div className="grid grid-cols-2 gap-4 mb-8">
-            <div className="bg-gray-800 p-4 rounded-lg">
-              <i className="ri-code-s-slash-line text-primary text-xl mb-2"></i>
-              <h3 className="text-white font-medium mb-1">Multi-Language</h3>
-              <p className="text-gray-400 text-sm">
-                Support for JavaScript, Python, Java, C++, and Ruby
-              </p>
-            </div>
-            <div className="bg-gray-800 p-4 rounded-lg">
-              <i className="ri-group-line text-primary text-xl mb-2"></i>
-              <h3 className="text-white font-medium mb-1">Real-time Collab</h3>
-              <p className="text-gray-400 text-sm">
-                See changes instantly as teammates code
-              </p>
-            </div>
-            <div className="bg-gray-800 p-4 rounded-lg">
-              <i className="ri-terminal-box-line text-primary text-xl mb-2"></i>
-              <h3 className="text-white font-medium mb-1">Code Execution</h3>
-              <p className="text-gray-400 text-sm">
-                Run your code securely in the browser
-              </p>
-            </div>
-            <div className="bg-gray-800 p-4 rounded-lg">
-              <i className="ri-chat-3-line text-primary text-xl mb-2"></i>
-              <h3 className="text-white font-medium mb-1">Integrated Chat</h3>
-              <p className="text-gray-400 text-sm">
-                Communicate with team members
-              </p>
-            </div>
+            {features.map((feature, index) => (
+              <div key={index} className="bg-gray-800 p-4 rounded-lg">
+                <i className={`${feature.icon} ${feature.color} text-xl mb-2`}></i>
+                <h3 className="text-white font-medium mb-1">{feature.title}</h3>
+                <p className="text-gray-400 text-sm">{feature.description}</p>
+              </div>
+            ))}
           </div>
         </div>
       </div>

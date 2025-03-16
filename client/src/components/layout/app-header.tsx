@@ -46,17 +46,17 @@ export function AppHeader() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-4">
-            <Link to="/">
+            {/* <Link to="/">
               <Button
                 variant="ghost"
                 className={`text-sm px-2 py-1 ${isActivePath("/")
-                    ? "bg-primary/10 text-primary"
-                    : "text-gray-300 hover:text-white"
+                  ? "bg-primary/10 text-primary"
+                  : "text-gray-300 hover:text-white"
                   }`}
               >
                 Dashboard
               </Button>
-            </Link>
+            </Link> */}
             {/* <Link to="/playground">
               <Button
                 variant="ghost"
