@@ -15,7 +15,12 @@ export default function HomePage() {
   
   // Fetch user's sessions
   const { data: sessions, isLoading } = useQuery<Session[]>({
-    queryKey: ["/api/sessions", { mine: true }],
+    queryKey: ["/api/sessions"],
+    queryFn: async () => {
+      const response = await fetch("/api/sessions?mine=true");
+      if (!response.ok) throw new Error("Failed to fetch sessions");
+      return response.json();
+    },
     enabled: !!user,
   });
   

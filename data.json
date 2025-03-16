@@ -1,0 +1,30 @@
+{
+  "users": [
+    {
+      "username": "just9krish",
+      "password": "dce5c9c6c5c68ab029e8aeca9f745755b9ab4fbce1375d12a48647e4247378dfe05475cde8d9fddecce072789b12281cc9f9775877264091165f1a95594a5043.1e8fccab2756dbcfbff6b26316a5e50e",
+      "id": 1
+    }
+  ],
+  "sessions": [
+    {
+      "name": "Test project",
+      "language": "javascript",
+      "isPublic": true,
+      "ownerId": 1,
+      "id": 1,
+      "createdAt": "2025-03-16T06:18:58.818Z"
+    }
+  ],
+  "files": [
+    {
+      "name": "index.js",
+      "content": "// Write your code here\nconsole.log('test')",
+      "sessionId": 1,
+      "id": 1,
+      "createdAt": "2025-03-16T06:18:58.818Z"
+    }
+  ],
+  "messages": [],
+  "participants": []
+}

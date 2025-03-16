@@ -383,11 +383,8 @@ export default function PlaygroundPage() {
               <button 
                 className="p-1 text-gray-400 hover:text-white rounded hover:bg-gray-700 text-xs"
                 onClick={() => {
-                  // Show dialog to create new file
-                  toast({
-                    title: "Create new file",
-                    description: "Use the file explorer tools to create a new file."
-                  });
+                  // Open the create file dialog in FileExplorer component
+                  document.getElementById('create-file-button')?.click();
                 }}
               >
                 <i className="ri-add-line"></i>
