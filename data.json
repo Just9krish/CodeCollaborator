@@ -43,6 +43,30 @@
       "ownerId": 1,
       "id": 4,
       "createdAt": "2025-03-16T10:02:19.010Z"
+    },
+    {
+      "name": "Test project",
+      "language": "javascript",
+      "isPublic": false,
+      "ownerId": 2,
+      "id": 5,
+      "createdAt": "2025-03-16T10:13:16.166Z"
+    },
+    {
+      "name": "Untitled Project",
+      "language": "javascript",
+      "isPublic": true,
+      "ownerId": 2,
+      "id": 6,
+      "createdAt": "2025-03-16T10:13:16.425Z"
+    },
+    {
+      "name": "Untitled Project",
+      "language": "javascript",
+      "isPublic": true,
+      "ownerId": 2,
+      "id": 7,
+      "createdAt": "2025-03-16T10:13:34.053Z"
     }
   ],
   "files": [
@@ -80,6 +104,27 @@
       "sessionId": 4,
       "id": 5,
       "createdAt": "2025-03-16T10:02:19.010Z"
+    },
+    {
+      "name": "index.js",
+      "content": "// Write your code here\n",
+      "sessionId": 5,
+      "id": 6,
+      "createdAt": "2025-03-16T10:13:16.166Z"
+    },
+    {
+      "name": "index.js",
+      "content": "// Write your code here\n",
+      "sessionId": 6,
+      "id": 7,
+      "createdAt": "2025-03-16T10:13:16.426Z"
+    },
+    {
+      "name": "index.js",
+      "content": "// Write your code here\n",
+      "sessionId": 7,
+      "id": 8,
+      "createdAt": "2025-03-16T10:13:34.053Z"
     }
   ],
   "messages": [
@@ -143,7 +188,7 @@
       "sessionId": 3,
       "userId": 2,
       "cursor": null,
-      "isActive": true,
+      "isActive": false,
       "id": 5,
       "joinedAt": "2025-03-16T10:03:33.242Z"
     }
