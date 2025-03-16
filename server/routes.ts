@@ -53,7 +53,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
             break;
             
           case "join_session":
-            // Store session ID and add user to participants
+            const session = await storage.getSession(message.sessionId);
+            if (!session) {
+              client.ws.send(JSON.stringify({
+                type: "error",
+                message: "Session not found"
+              }));
+              break;
+            }
+            
+            // Check if user has access to session
+            if (!session.isPublic && client.userId > 0 && session.ownerId !== client.userId) {
+              // Check if user is a participant
+              const participants = await storage.getSessionParticipants(message.sessionId);
+              const isParticipant = participants.some(p => p.userId === client.userId);
+              
+              if (!isParticipant) {
+                // Check if user has an accepted collaboration request
+                const requests = await storage.getCollaborationRequestsByUser(client.userId);
+                const hasAccess = requests.some(r => 
+                  r.sessionId === message.sessionId && r.status === 'accepted'
+                );
+                
+                if (!hasAccess) {
+                  client.ws.send(JSON.stringify({
+                    type: "access_denied",
+                    message: "You don't have access to this private session",
+                    sessionId: message.sessionId
+                  }));
+                  break;
+                }
+              }
+            }
+            
+            // User has access, join the session
             client.sessionId = message.sessionId;
             
             if (client.userId > 0) {
@@ -179,13 +212,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Helper function to broadcast messages to all clients in a session
   function broadcastToSession(sessionId: number, message: any, excludeClient?: ClientConnection) {
-    for (const client of clients) {
+    clients.forEach(client => {
       if (client.sessionId === sessionId && 
           client.ws.readyState === WebSocket.OPEN && 
           client !== excludeClient) {
         client.ws.send(JSON.stringify(message));
       }
-    }
+    });
   }
   
   // API Routes
@@ -244,10 +277,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Session not found" });
       }
       
-      // Get files for this session
-      const files = await storage.getFilesBySession(sessionId);
+      // Check if the user has access to this session
+      if (!session.isPublic) {
+        // Private session - check if user is authenticated
+        if (!req.isAuthenticated()) {
+          return res.status(401).json({ 
+            message: "Authentication required",
+            requiresAuth: true,
+            sessionId: session.id
+          });
+        }
+        
+        // If not the owner, check if they have an accepted collaboration request
+        // or are already a participant
+        if (session.ownerId !== req.user!.id) {
+          // Check if user is a participant
+          const participants = await storage.getSessionParticipants(sessionId);
+          const isParticipant = participants.some(p => p.userId === req.user!.id);
+          
+          if (!isParticipant) {
+            // Check if user has an accepted collaboration request
+            const requests = await storage.getCollaborationRequestsByUser(req.user!.id);
+            const hasAccess = requests.some(r => 
+              r.sessionId === sessionId && r.status === 'accepted'
+            );
+            
+            if (!hasAccess) {
+              return res.status(403).json({ 
+                message: "You don't have access to this session",
+                requiresRequest: true,
+                sessionId: session.id,
+                ownerId: session.ownerId
+              });
+            }
+          }
+        }
+      }
       
-      // Get participants
+      // User has access, retrieve session data
+      const files = await storage.getFilesBySession(sessionId);
       const participants = await storage.getSessionParticipants(sessionId, true);
       
       return res.status(200).json({ session, files, participants });
@@ -412,6 +480,146 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Languages
   app.get("/api/languages", (_req, res) => {
     return res.status(200).json(languages);
+  });
+  
+  // Collaboration Requests
+  app.post("/api/sessions/:sessionId/collaboration-requests", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
+    
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      const session = await storage.getSession(sessionId);
+      
+      if (!session) {
+        return res.status(404).json({ message: "Session not found" });
+      }
+      
+      // If the session is public, collaboration requests are not needed
+      if (session.isPublic) {
+        return res.status(400).json({ message: "Cannot request collaboration for public sessions" });
+      }
+      
+      // Check if user already has an active request
+      const existingRequests = await storage.getCollaborationRequestsByUser(req.user!.id);
+      const existingRequest = existingRequests.find(r => 
+        r.sessionId === sessionId && r.status === 'pending'
+      );
+      
+      if (existingRequest) {
+        return res.status(409).json({ message: "You already have a pending request for this session" });
+      }
+      
+      // Create collaboration request
+      const request = await storage.createCollaborationRequest({
+        sessionId,
+        fromUserId: req.user!.id,
+        status: 'pending'
+      });
+      
+      // Notify the session owner via WebSocket
+      const ownerClients = Array.from(clients).filter(c => c.userId === session.ownerId);
+      for (const client of ownerClients) {
+        if (client.ws.readyState === WebSocket.OPEN) {
+          client.ws.send(JSON.stringify({
+            type: "collaboration_request",
+            request
+          }));
+        }
+      }
+      
+      return res.status(201).json(request);
+    } catch (error) {
+      console.error("Error creating collaboration request:", error);
+      return res.status(500).json({ message: "Failed to create collaboration request" });
+    }
+  });
+  
+  app.get("/api/collaboration-requests", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
+    
+    try {
+      // Get received requests (for sessions owned by the current user)
+      const ownedSessions = await storage.getSessions(req.user!.id);
+      const sessionIds = ownedSessions.map(s => s.id);
+      
+      let receivedRequests: any[] = [];
+      for (const sessionId of sessionIds) {
+        const requests = await storage.getCollaborationRequestsBySession(sessionId);
+        receivedRequests = [...receivedRequests, ...requests];
+      }
+      
+      // Get sent requests
+      const sentRequests = await storage.getCollaborationRequestsByUser(req.user!.id);
+      
+      return res.status(200).json({
+        received: receivedRequests,
+        sent: sentRequests
+      });
+    } catch (error) {
+      console.error("Error fetching collaboration requests:", error);
+      return res.status(500).json({ message: "Failed to fetch collaboration requests" });
+    }
+  });
+  
+  app.patch("/api/collaboration-requests/:id", async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
+    
+    try {
+      const requestId = parseInt(req.params.id);
+      const request = await storage.getCollaborationRequest(requestId);
+      
+      if (!request) {
+        return res.status(404).json({ message: "Collaboration request not found" });
+      }
+      
+      const session = await storage.getSession(request.sessionId);
+      if (!session) {
+        return res.status(404).json({ message: "Session not found" });
+      }
+      
+      // Only the owner of the session can approve/reject requests
+      if (session.ownerId !== req.user!.id) {
+        return res.status(403).json({ message: "Not authorized to update this request" });
+      }
+      
+      const { status } = req.body;
+      if (status !== 'accepted' && status !== 'rejected') {
+        return res.status(400).json({ message: "Invalid status value" });
+      }
+      
+      const updatedRequest = await storage.updateCollaborationRequest(requestId, { status });
+      
+      // If request is accepted, add the user as a participant (if they're not already)
+      if (status === 'accepted') {
+        const participants = await storage.getSessionParticipants(session.id);
+        const existingParticipant = participants.find(p => p.userId === request.fromUserId);
+        
+        if (!existingParticipant) {
+          await storage.addParticipant({
+            sessionId: session.id,
+            userId: request.fromUserId,
+            isActive: false,
+            cursor: null
+          });
+        }
+      }
+      
+      // Notify the requesting user
+      const requesterClients = Array.from(clients).filter(c => c.userId === request.fromUserId);
+      for (const client of requesterClients) {
+        if (client.ws.readyState === WebSocket.OPEN) {
+          client.ws.send(JSON.stringify({
+            type: "collaboration_request_update",
+            request: updatedRequest
+          }));
+        }
+      }
+      
+      return res.status(200).json(updatedRequest);
+    } catch (error) {
+      console.error("Error updating collaboration request:", error);
+      return res.status(500).json({ message: "Failed to update collaboration request" });
+    }
   });
 
   return httpServer;

@@ -27,6 +27,22 @@
       "ownerId": 2,
       "id": 2,
       "createdAt": "2025-03-16T07:52:13.755Z"
+    },
+    {
+      "name": "M y asoem prodjjcceet",
+      "language": "javascript",
+      "isPublic": false,
+      "ownerId": 1,
+      "id": 3,
+      "createdAt": "2025-03-16T10:02:18.538Z"
+    },
+    {
+      "name": "Untitled Project",
+      "language": "javascript",
+      "isPublic": true,
+      "ownerId": 1,
+      "id": 4,
+      "createdAt": "2025-03-16T10:02:19.010Z"
     }
   ],
   "files": [
@@ -50,6 +66,20 @@
       "sessionId": 2,
       "id": 3,
       "createdAt": "2025-03-16T07:52:13.756Z"
+    },
+    {
+      "name": "index.js",
+      "content": "// Write your code here\n",
+      "sessionId": 3,
+      "id": 4,
+      "createdAt": "2025-03-16T10:02:18.539Z"
+    },
+    {
+      "name": "index.js",
+      "content": "// Write your code here\n",
+      "sessionId": 4,
+      "id": 5,
+      "createdAt": "2025-03-16T10:02:19.010Z"
     }
   ],
   "messages": [
@@ -97,9 +127,25 @@
       "sessionId": 2,
       "userId": 2,
       "cursor": null,
-      "isActive": true,
+      "isActive": false,
       "id": 3,
       "joinedAt": "2025-03-16T07:52:22.393Z"
+    },
+    {
+      "sessionId": 3,
+      "userId": 1,
+      "cursor": null,
+      "isActive": false,
+      "id": 4,
+      "joinedAt": "2025-03-16T10:03:00.707Z"
+    },
+    {
+      "sessionId": 3,
+      "userId": 2,
+      "cursor": null,
+      "isActive": true,
+      "id": 5,
+      "joinedAt": "2025-03-16T10:03:33.242Z"
     }
   ],
   "collaborationRequests": []

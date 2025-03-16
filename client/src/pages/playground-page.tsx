@@ -49,6 +49,15 @@ export default function PlaygroundPage() {
   // Ref to track if we have already joined the session
   const hasJoinedSession = useRef(false);
   
+  // State for auth/access errors
+  const [accessError, setAccessError] = useState<{ 
+    requiresAuth?: boolean, 
+    requiresRequest?: boolean,
+    sessionId?: number,
+    ownerId?: number,
+    message: string 
+  } | null>(null);
+  
   // Fetch or create session
   const { data: sessionData, isLoading, error, refetch } = useQuery<SessionData>({
     queryKey: ["/api/sessions", sessionId],
@@ -56,9 +65,34 @@ export default function PlaygroundPage() {
       if (sessionId) {
         // Fetch existing session
         const response = await fetch(`/api/sessions/${sessionId}`);
+        
+        if (response.status === 401) {
+          // Authentication required - user needs to login
+          const data = await response.json();
+          setAccessError({
+            requiresAuth: true,
+            sessionId: data.sessionId,
+            message: "Authentication required to access this session"
+          });
+          throw new Error("Authentication required");
+        }
+        
+        if (response.status === 403) {
+          // Access denied - need to request collaboration
+          const data = await response.json();
+          setAccessError({
+            requiresRequest: true,
+            sessionId: data.sessionId,
+            ownerId: data.ownerId,
+            message: "You don't have access to this private session"
+          });
+          throw new Error("Access denied");
+        }
+        
         if (!response.ok) {
           throw new Error("Failed to fetch session");
         }
+        
         return response.json();
       } else {
         // Create new session
@@ -72,6 +106,7 @@ export default function PlaygroundPage() {
       }
     },
     enabled: !!user,
+    retry: false // Don't retry on auth errors
   });
   
   // Create mutation for updating file content
