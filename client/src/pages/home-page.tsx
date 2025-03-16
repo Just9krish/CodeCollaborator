@@ -8,9 +8,10 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { Session } from "@shared/schema";
+import { Session, languages } from "@shared/schema";
 import { Loader2, Copy, Globe, Lock } from "lucide-react";
 import { wsManager } from "@/lib/websocket";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -141,7 +142,7 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold text-white">Your Projects</h1>
-            <Button onClick={createNewSession}>
+            <Button onClick={openCreateDialog}>
               <i className="ri-add-line mr-1"></i>
               New Project
             </Button>
@@ -154,7 +155,7 @@ export default function HomePage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Create New Project Card */}
-              <Card className="bg-gray-800 border-gray-700 hover:border-primary transition-colors cursor-pointer" onClick={createNewSession}>
+              <Card className="bg-gray-800 border-gray-700 hover:border-primary transition-colors cursor-pointer" onClick={openCreateDialog}>
                 <CardContent className="flex items-center justify-center h-48">
                   <div className="text-center">
                     <div className="flex justify-center">
@@ -185,8 +186,17 @@ export default function HomePage() {
                     <CardFooter className="pt-2 border-t border-gray-700">
                       <div className="flex items-center justify-between w-full">
                         <div className="flex items-center text-gray-400 text-sm">
-                          <i className="ri-eye-line mr-1"></i>
-                          {session.isPublic ? "Public" : "Private"}
+                          {session.isPublic ? (
+                            <div className="flex items-center">
+                              <Globe className="w-4 h-4 mr-1" />
+                              Public
+                            </div>
+                          ) : (
+                            <div className="flex items-center">
+                              <Lock className="w-4 h-4 mr-1" />
+                              Private
+                            </div>
+                          )}
                         </div>
                         <Button variant="ghost" size="sm" className="text-primary">
                           <i className="ri-arrow-right-line"></i>
@@ -206,7 +216,7 @@ export default function HomePage() {
                       Create your first coding project to get started.
                     </p>
                     <div className="mt-6">
-                      <Button onClick={createNewSession}>
+                      <Button onClick={openCreateDialog}>
                         <i className="ri-add-line mr-1"></i>
                         Create Project
                       </Button>
@@ -218,6 +228,172 @@ export default function HomePage() {
           )}
         </div>
       </main>
+      
+      {/* Create Project Dialog */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="sm:max-w-[425px] bg-gray-800 text-white border-gray-700">
+          <DialogHeader>
+            <DialogTitle className="text-white">Create New Project</DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Set up a new coding project with your preferred settings.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="project-name">Project Name</Label>
+              <Input 
+                id="project-name" 
+                placeholder="My Awesome Project" 
+                className="bg-gray-700 border-gray-600 text-white"
+                value={newProjectName}
+                onChange={(e) => setNewProjectName(e.target.value)}
+                autoFocus
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="language">Programming Language</Label>
+              <Select 
+                value={projectLanguage} 
+                onValueChange={(value) => setProjectLanguage(value)}
+              >
+                <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                  <SelectValue placeholder="Select a language" />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-700 border-gray-600 text-white">
+                  {languages.map((lang) => (
+                    <SelectItem key={lang.id} value={lang.id} className="text-white hover:bg-gray-600">
+                      <div className="flex items-center">
+                        <i className={`${lang.icon} ${lang.iconColor} mr-2`}></i>
+                        {lang.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <Label htmlFor="public-visibility" className="cursor-pointer">Project Visibility</Label>
+              <div className="flex items-center space-x-2">
+                <Label htmlFor="public-visibility" className="text-gray-400">
+                  {isPublic ? (
+                    <div className="flex items-center">
+                      <Globe className="w-4 h-4 mr-1" />
+                      Public
+                    </div>
+                  ) : (
+                    <div className="flex items-center">
+                      <Lock className="w-4 h-4 mr-1" />
+                      Private
+                    </div>
+                  )}
+                </Label>
+                <Switch 
+                  id="public-visibility" 
+                  checked={isPublic}
+                  onCheckedChange={setIsPublic}
+                />
+              </div>
+            </div>
+            
+            {isPublic && (
+              <div className="p-3 bg-blue-900/20 border border-blue-900/30 rounded-md text-sm text-blue-300">
+                <div className="flex items-start">
+                  <Globe className="w-4 h-4 mr-2 mt-0.5 text-blue-400" />
+                  <div>
+                    Public projects can be accessed by anyone with the link. Your code will be visible to all visitors.
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {!isPublic && (
+              <div className="p-3 bg-orange-900/20 border border-orange-900/30 rounded-md text-sm text-orange-300">
+                <div className="flex items-start">
+                  <Lock className="w-4 h-4 mr-2 mt-0.5 text-orange-400" />
+                  <div>
+                    Private projects require collaboration requests for others to join. Only you can approve access.
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsCreateDialogOpen(false)}
+              className="bg-transparent hover:bg-gray-700 text-white border-gray-600"
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleCreateSession}
+              disabled={createSessionMutation.isPending}
+              className="relative"
+            >
+              {createSessionMutation.isPending && (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              )}
+              Create Project
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Share URL Dialog */}
+      <Dialog open={isShareDialogOpen} onOpenChange={setIsShareDialogOpen}>
+        <DialogContent className="sm:max-w-[425px] bg-gray-800 text-white border-gray-700">
+          <DialogHeader>
+            <DialogTitle className="text-white">Project Created!</DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Your public project has been created successfully. Share this link with others to collaborate.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-2">
+            <div className="flex items-center space-x-2">
+              <Input
+                ref={urlInputRef}
+                readOnly
+                value={sharingUrl}
+                className="bg-gray-700 border-gray-600 text-white flex-1"
+              />
+              <Button 
+                onClick={copyToClipboard} 
+                variant="outline"
+                className="bg-transparent hover:bg-gray-700 text-white border-gray-600"
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="p-3 bg-blue-900/20 border border-blue-900/30 rounded-md text-sm text-blue-300">
+              <div className="flex items-start">
+                <Globe className="w-4 h-4 mr-2 mt-0.5 text-blue-400" />
+                <div>
+                  Anyone with this link can view and participate in this coding session. No approval needed.
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              onClick={() => {
+                setIsShareDialogOpen(false);
+                if (newSessionId) {
+                  navigate(`/playground/${newSessionId}`);
+                }
+              }}
+            >
+              Go to Project
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
