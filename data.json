@@ -4,6 +4,11 @@
       "username": "just9krish",
       "password": "dce5c9c6c5c68ab029e8aeca9f745755b9ab4fbce1375d12a48647e4247378dfe05475cde8d9fddecce072789b12281cc9f9775877264091165f1a95594a5043.1e8fccab2756dbcfbff6b26316a5e50e",
       "id": 1
+    },
+    {
+      "username": "hv443",
+      "password": "55c00930baf21e452b1a2fdbce7f7b4e4657b92dfb77fa7b4ee2d22a09cba1afe29bc2f6b240c5fb671042e2b1fa3772a58a388077ada36556b14e125592c7a8.818b8c03db60a3e8ce2e272db5dea97f",
+      "id": 2
     }
   ],
   "sessions": [
@@ -14,17 +19,87 @@
       "ownerId": 1,
       "id": 1,
       "createdAt": "2025-03-16T06:18:58.818Z"
+    },
+    {
+      "name": "Fork of Test project",
+      "language": "javascript",
+      "isPublic": true,
+      "ownerId": 2,
+      "id": 2,
+      "createdAt": "2025-03-16T07:52:13.755Z"
     }
   ],
   "files": [
     {
       "name": "index.js",
-      "content": "// Write your code here\nconsole.log('test')",
+      "content": "console.log(\"howos\")\r\n\r\nconsole.log()\r\n\r\n",
       "sessionId": 1,
       "id": 1,
       "createdAt": "2025-03-16T06:18:58.818Z"
+    },
+    {
+      "name": "test.js",
+      "content": "",
+      "sessionId": 1,
+      "id": 2,
+      "createdAt": "2025-03-16T07:20:45.371Z"
+    },
+    {
+      "name": "index.js",
+      "content": "console.log(\"howos\")\r\n\r\nconsole.log()",
+      "sessionId": 2,
+      "id": 3,
+      "createdAt": "2025-03-16T07:52:13.756Z"
     }
   ],
-  "messages": [],
-  "participants": []
+  "messages": [
+    {
+      "content": "hii",
+      "userId": 2,
+      "sessionId": 1,
+      "id": 1,
+      "createdAt": "2025-03-16T07:48:44.002Z"
+    },
+    {
+      "content": "wut the fukc",
+      "userId": 1,
+      "sessionId": 1,
+      "id": 2,
+      "createdAt": "2025-03-16T07:48:56.594Z"
+    }
+  ],
+  "participants": [
+    {
+      "sessionId": 1,
+      "userId": 1,
+      "cursor": {
+        "line": 5,
+        "column": 1,
+        "fileId": 1
+      },
+      "isActive": false,
+      "id": 1,
+      "joinedAt": "2025-03-16T07:20:35.872Z"
+    },
+    {
+      "sessionId": 1,
+      "userId": 2,
+      "cursor": {
+        "line": 3,
+        "column": 14,
+        "fileId": 1
+      },
+      "isActive": false,
+      "id": 2,
+      "joinedAt": "2025-03-16T07:35:47.806Z"
+    },
+    {
+      "sessionId": 2,
+      "userId": 2,
+      "cursor": null,
+      "isActive": true,
+      "id": 3,
+      "joinedAt": "2025-03-16T07:52:22.393Z"
+    }
+  ]
 }

@@ -21,7 +21,7 @@ export const sessions = pgTable("sessions", {
   name: text("name").notNull(),
   ownerId: integer("owner_id").notNull(),
   language: text("language").notNull().default("javascript"),
-  isPublic: boolean("is_public").notNull().default(true),
+  isPublic: boolean("is_public").notNull().default(false), // Changed to private by default
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -30,6 +30,21 @@ export const insertSessionSchema = createInsertSchema(sessions).pick({
   ownerId: true,
   language: true,
   isPublic: true,
+});
+
+// Collaboration requests
+export const collaborationRequests = pgTable("collaboration_requests", {
+  id: serial("id").primaryKey(),
+  sessionId: integer("session_id").notNull(),
+  fromUserId: integer("from_user_id").notNull(),
+  status: text("status").notNull().default("pending"), // pending, accepted, rejected
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export const insertCollaborationRequestSchema = createInsertSchema(collaborationRequests).pick({
+  sessionId: true,
+  fromUserId: true,
+  status: true,
 });
 
 export type InsertSession = z.infer<typeof insertSessionSchema>;

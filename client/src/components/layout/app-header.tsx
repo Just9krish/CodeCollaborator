@@ -103,14 +103,18 @@ export function AppHeader() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56 bg-gray-800 border-gray-700 text-white">
-                <DropdownMenuItem className="text-gray-300 hover:text-white focus:bg-gray-700">
-                  <i className="ri-user-line mr-2"></i>
-                  <span>Profile</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="text-gray-300 hover:text-white focus:bg-gray-700">
-                  <i className="ri-settings-4-line mr-2"></i>
-                  <span>Settings</span>
-                </DropdownMenuItem>
+                <Link to="/profile">
+                  <DropdownMenuItem className="text-gray-300 hover:text-white focus:bg-gray-700">
+                    <i className="ri-user-line mr-2"></i>
+                    <span>Profile</span>
+                  </DropdownMenuItem>
+                </Link>
+                <Link to="/settings">
+                  <DropdownMenuItem className="text-gray-300 hover:text-white focus:bg-gray-700">
+                    <i className="ri-settings-4-line mr-2"></i>
+                    <span>Settings</span>
+                  </DropdownMenuItem>
+                </Link>
                 <DropdownMenuSeparator className="bg-gray-700" />
                 <DropdownMenuItem 
                   className="text-gray-300 hover:text-white focus:bg-gray-700"
