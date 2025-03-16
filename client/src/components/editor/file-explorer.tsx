@@ -211,6 +211,13 @@ export function FileExplorer({
   
   return (
     <div className="py-2 px-1">
+      {/* Hidden button for create file dialog */}
+      <button 
+        id="create-file-button" 
+        className="hidden"
+        onClick={() => setIsCreatingFile(true)}
+      />
+      
       {files.map(file => (
         <FileItem
           key={file.id}
