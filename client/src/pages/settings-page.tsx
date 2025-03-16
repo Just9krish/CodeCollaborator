@@ -1,15 +1,16 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 
@@ -19,14 +20,14 @@ export default function SettingsPage() {
   const [notifications, setNotifications] = useState(true);
   const [theme, setTheme] = useState("dark");
   const [loading, setLoading] = useState(false);
-  
+
   if (!user) {
     return null;
   }
-  
+
   const handleSavePreferences = () => {
     setLoading(true);
-    
+
     setTimeout(() => {
       setLoading(false);
       toast({
@@ -35,17 +36,17 @@ export default function SettingsPage() {
       });
     }, 1000);
   };
-  
+
   return (
     <div className="container mx-auto py-10 px-4">
       <h1 className="text-3xl font-bold mb-8 text-white">Settings</h1>
-      
+
       <Tabs defaultValue="account" className="w-full">
         <TabsList className="grid w-full max-w-md grid-cols-2 mb-8">
           <TabsTrigger value="account">Account</TabsTrigger>
           <TabsTrigger value="preferences">Preferences</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="account">
           <Card className="bg-gray-800 border-gray-700 text-white">
             <CardHeader>
@@ -57,8 +58,8 @@ export default function SettingsPage() {
             <CardContent className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="username">Username</Label>
-                <Input 
-                  id="username" 
+                <Input
+                  id="username"
                   value={user.username}
                   disabled
                   className="bg-gray-700 border-gray-600"
@@ -67,38 +68,38 @@ export default function SettingsPage() {
                   Username cannot be changed at this time
                 </p>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="current-password">Current Password</Label>
-                <Input 
-                  id="current-password" 
+                <Input
+                  id="current-password"
                   type="password"
-                  placeholder="Enter current password" 
+                  placeholder="Enter current password"
                   className="bg-gray-700 border-gray-600"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="new-password">New Password</Label>
-                <Input 
-                  id="new-password" 
-                  type="password" 
+                <Input
+                  id="new-password"
+                  type="password"
                   placeholder="Enter new password"
                   className="bg-gray-700 border-gray-600"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="confirm-password">Confirm Password</Label>
-                <Input 
-                  id="confirm-password" 
-                  type="password" 
+                <Input
+                  id="confirm-password"
+                  type="password"
                   placeholder="Confirm new password"
                   className="bg-gray-700 border-gray-600"
                 />
               </div>
-              
-              <Button 
+
+              <Button
                 onClick={() => {
                   toast({
                     title: "Password updated",
@@ -112,7 +113,7 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="preferences">
           <Card className="bg-gray-800 border-gray-700 text-white">
             <CardHeader>
@@ -129,13 +130,13 @@ export default function SettingsPage() {
                     Receive email notifications about collaboration requests
                   </p>
                 </div>
-                <Switch 
-                  id="notifications" 
-                  checked={notifications} 
-                  onCheckedChange={setNotifications} 
+                <Switch
+                  id="notifications"
+                  checked={notifications}
+                  onCheckedChange={setNotifications}
                 />
               </div>
-              
+
               <div className="flex flex-col space-y-2">
                 <Label htmlFor="theme">Theme Preference</Label>
                 <div className="grid grid-cols-2 gap-2 pt-2">
@@ -157,8 +158,8 @@ export default function SettingsPage() {
                   </Button>
                 </div>
               </div>
-              
-              <Button 
+
+              <Button
                 onClick={handleSavePreferences}
                 className="mt-4"
                 disabled={loading}
@@ -168,7 +169,9 @@ export default function SettingsPage() {
                     <span className="mr-2 h-4 w-4 animate-spin"></span>
                     Saving...
                   </>
-                ) : "Save Preferences"}
+                ) : (
+                  "Save Preferences"
+                )}
               </Button>
             </CardContent>
           </Card>

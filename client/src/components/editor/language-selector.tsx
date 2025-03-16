@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { languages } from "@shared/schema";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { useQuery } from "@tanstack/react-query";
 
 type LanguageSelectorProps = {
@@ -11,17 +15,19 @@ type LanguageSelectorProps = {
 
 export function LanguageSelector({
   currentLanguage,
-  onSelect
+  onSelect,
 }: LanguageSelectorProps) {
   const [open, setOpen] = useState(false);
 
   // Get language info from API (in a real app you might want to fetch this)
   const { data: languageOptions } = useQuery({
     queryKey: ["/api/languages"],
-    initialData: languages
+    initialData: languages,
   });
 
-  const selectedLanguage = languageOptions.find(lang => lang.id === currentLanguage) || languageOptions[0];
+  const selectedLanguage =
+    languageOptions.find((lang) => lang.id === currentLanguage) ||
+    languageOptions[0];
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -38,12 +44,13 @@ export function LanguageSelector({
       </PopoverTrigger>
       <PopoverContent className="w-48 p-0 bg-gray-800 border border-gray-700">
         <div className="py-1">
-          {languageOptions.map(language => (
+          {languageOptions.map((language) => (
             <button
               key={language.id}
-              className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-700 flex items-center ${
-                language.id === currentLanguage ? 'bg-gray-700 text-white' : 'text-gray-300'
-              }`}
+              className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-700 flex items-center ${language.id === currentLanguage
+                  ? "bg-gray-700 text-white"
+                  : "text-gray-300"
+                }`}
               onClick={() => {
                 onSelect(language.id);
                 setOpen(false);

@@ -1,8 +1,19 @@
 import { useState } from "react";
 import { File } from "@shared/schema";
 import { languages } from "@shared/schema";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -26,42 +37,47 @@ type FileItemProps = {
 };
 
 function getFileIcon(fileName: string) {
-  const extension = fileName.split('.').pop()?.toLowerCase();
-  
+  const extension = fileName.split(".").pop()?.toLowerCase();
+
   switch (extension) {
-    case 'js':
-      return { icon: 'ri-javascript-line', color: 'text-yellow-400' };
-    case 'py':
-      return { icon: 'ri-python-line', color: 'text-blue-400' };
-    case 'java':
-      return { icon: 'ri-code-s-slash-line', color: 'text-orange-400' };
-    case 'cpp':
-    case 'c':
-    case 'h':
-      return { icon: 'ri-code-s-slash-line', color: 'text-blue-500' };
-    case 'rb':
-      return { icon: 'ri-ruby-line', color: 'text-red-500' };
-    case 'html':
-      return { icon: 'ri-html5-line', color: 'text-orange-400' };
-    case 'css':
-      return { icon: 'ri-file-list-line', color: 'text-blue-400' };
-    case 'json':
-      return { icon: 'ri-brackets-line', color: 'text-yellow-300' };
-    case 'md':
-      return { icon: 'ri-markdown-line', color: 'text-blue-300' };
+    case "js":
+      return { icon: "ri-javascript-line", color: "text-yellow-400" };
+    case "py":
+      return { icon: "ri-python-line", color: "text-blue-400" };
+    case "java":
+      return { icon: "ri-code-s-slash-line", color: "text-orange-400" };
+    case "cpp":
+    case "c":
+    case "h":
+      return { icon: "ri-code-s-slash-line", color: "text-blue-500" };
+    case "rb":
+      return { icon: "ri-ruby-line", color: "text-red-500" };
+    case "html":
+      return { icon: "ri-html5-line", color: "text-orange-400" };
+    case "css":
+      return { icon: "ri-file-list-line", color: "text-blue-400" };
+    case "json":
+      return { icon: "ri-brackets-line", color: "text-yellow-300" };
+    case "md":
+      return { icon: "ri-markdown-line", color: "text-blue-300" };
     default:
-      return { icon: 'ri-file-code-line', color: 'text-gray-400' };
+      return { icon: "ri-file-code-line", color: "text-gray-400" };
   }
 }
 
-function FileItem({ file, isActive, onSelect, onRename, onDelete }: FileItemProps) {
+function FileItem({
+  file,
+  isActive,
+  onSelect,
+  onRename,
+  onDelete,
+}: FileItemProps) {
   const { icon, color } = getFileIcon(file.name);
-  
+
   return (
     <div
-      className={`file-item group flex items-center py-1 px-2 rounded cursor-pointer hover:bg-gray-800 text-gray-300 hover:text-white ${
-        isActive ? 'bg-gray-800 text-white' : ''
-      }`}
+      className={`file-item group flex items-center py-1 px-2 rounded cursor-pointer hover:bg-gray-800 text-gray-300 hover:text-white ${isActive ? "bg-gray-800 text-white" : ""
+        }`}
       onClick={onSelect}
     >
       <i className={`${icon} ${color} mr-2 text-sm`}></i>
@@ -85,7 +101,7 @@ function FileItem({ file, isActive, onSelect, onRename, onDelete }: FileItemProp
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
-        
+
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -114,7 +130,7 @@ export function FileExplorer({
   activeFileId,
   sessionId,
   onFileSelect,
-  onFileUpdated
+  onFileUpdated,
 }: FileExplorerProps) {
   const [isCreatingFile, setIsCreatingFile] = useState(false);
   const [isRenamingFile, setIsRenamingFile] = useState(false);
@@ -123,25 +139,25 @@ export function FileExplorer({
   const [currentFile, setCurrentFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
-  
+
   const handleCreateFile = async () => {
     if (!newFileName) {
       setError("File name is required");
       return;
     }
-    
+
     try {
       await apiRequest("POST", `/api/sessions/${sessionId}/files`, {
         name: newFileName,
         content: "",
-        sessionId
+        sessionId,
       });
-      
+
       toast({
         title: "File created",
-        description: `${newFileName} has been created successfully.`
+        description: `${newFileName} has been created successfully.`,
       });
-      
+
       setIsCreatingFile(false);
       setNewFileName("");
       setError(null);
@@ -151,25 +167,25 @@ export function FileExplorer({
       console.error("Error creating file:", error);
     }
   };
-  
+
   const handleRenameFile = async () => {
     if (!currentFile) return;
-    
+
     if (!newFileName) {
       setError("File name is required");
       return;
     }
-    
+
     try {
       await apiRequest("PATCH", `/api/files/${currentFile.id}`, {
-        name: newFileName
+        name: newFileName,
       });
-      
+
       toast({
         title: "File renamed",
-        description: `File has been renamed to ${newFileName}.`
+        description: `File has been renamed to ${newFileName}.`,
       });
-      
+
       setIsRenamingFile(false);
       setNewFileName("");
       setCurrentFile(null);
@@ -180,25 +196,25 @@ export function FileExplorer({
       console.error("Error renaming file:", error);
     }
   };
-  
+
   const handleDeleteFile = async () => {
     if (!currentFile) return;
-    
+
     try {
       await apiRequest("DELETE", `/api/files/${currentFile.id}`);
-      
+
       toast({
         title: "File deleted",
-        description: `${currentFile.name} has been deleted.`
+        description: `${currentFile.name} has been deleted.`,
       });
-      
+
       setIsDeletingFile(false);
       setCurrentFile(null);
       onFileUpdated();
-      
+
       // If the deleted file was active, select another file
       if (currentFile.id === activeFileId && files.length > 1) {
-        const otherFile = files.find(f => f.id !== currentFile.id);
+        const otherFile = files.find((f) => f.id !== currentFile.id);
         if (otherFile) {
           onFileSelect(otherFile.id);
         }
@@ -208,17 +224,17 @@ export function FileExplorer({
       console.error("Error deleting file:", error);
     }
   };
-  
+
   return (
     <div className="py-2 px-1">
       {/* Hidden button for create file dialog */}
-      <button 
-        id="create-file-button" 
+      <button
+        id="create-file-button"
         className="hidden"
         onClick={() => setIsCreatingFile(true)}
       />
-      
-      {files.map(file => (
+
+      {files.map((file) => (
         <FileItem
           key={file.id}
           file={file}
@@ -235,7 +251,7 @@ export function FileExplorer({
           }}
         />
       ))}
-      
+
       {/* Create File Dialog */}
       <Dialog open={isCreatingFile} onOpenChange={setIsCreatingFile}>
         <DialogContent className="bg-gray-800 text-white border border-gray-700">
@@ -270,7 +286,7 @@ export function FileExplorer({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
+
       {/* Rename File Dialog */}
       <Dialog open={isRenamingFile} onOpenChange={setIsRenamingFile}>
         <DialogContent className="bg-gray-800 text-white border border-gray-700">
@@ -306,7 +322,7 @@ export function FileExplorer({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
+
       {/* Delete File Confirmation Dialog */}
       <Dialog open={isDeletingFile} onOpenChange={setIsDeletingFile}>
         <DialogContent className="bg-gray-800 text-white border border-gray-700">
@@ -315,7 +331,9 @@ export function FileExplorer({
           </DialogHeader>
           <div className="py-4">
             <p>Are you sure you want to delete "{currentFile?.name}"?</p>
-            <p className="text-sm text-gray-400 mt-2">This action cannot be undone.</p>
+            <p className="text-sm text-gray-400 mt-2">
+              This action cannot be undone.
+            </p>
           </div>
           <DialogFooter>
             <Button
@@ -327,7 +345,9 @@ export function FileExplorer({
             >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDeleteFile}>Delete</Button>
+            <Button variant="destructive" onClick={handleDeleteFile}>
+              Delete
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

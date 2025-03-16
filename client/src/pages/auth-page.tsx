@@ -6,8 +6,22 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { insertUserSchema } from "@shared/schema";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2 } from "lucide-react";
@@ -18,12 +32,14 @@ const loginSchema = insertUserSchema.extend({
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
-const registerSchema = loginSchema.extend({
-  confirmPassword: z.string(),
-}).refine(data => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
-});
+const registerSchema = loginSchema
+  .extend({
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
 export default function AuthPage() {
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
@@ -32,21 +48,21 @@ export default function AuthPage() {
 
   // Check for redirect after login
   const [redirectPath, setRedirectPath] = useState<string | null>(null);
-  
+
   // Get redirect path from localStorage on component mount
   useEffect(() => {
-    const savedRedirect = localStorage.getItem('redirectAfterLogin');
+    const savedRedirect = localStorage.getItem("redirectAfterLogin");
     if (savedRedirect) {
       setRedirectPath(savedRedirect);
     }
   }, []);
-  
+
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
       // Clear the localStorage item
-      localStorage.removeItem('redirectAfterLogin');
-      
+      localStorage.removeItem("redirectAfterLogin");
+
       // Redirect to the saved path or fallback to home
       if (redirectPath) {
         navigate(redirectPath);
@@ -101,31 +117,42 @@ export default function AuthPage() {
             <i className="ri-code-box-line text-primary text-3xl mr-2"></i>
             <h1 className="text-3xl font-bold text-white">CodeCollab</h1>
           </div>
-          <h2 className="text-2xl font-bold text-white mb-4">Collaborative Code Playground</h2>
+          <h2 className="text-2xl font-bold text-white mb-4">
+            Collaborative Code Playground
+          </h2>
           <p className="text-gray-300 mb-6">
-            Write, edit, and execute code in real-time with developers around the world. 
-            Seamlessly collaborate on coding projects with integrated chat and debugging tools.
+            Write, edit, and execute code in real-time with developers around
+            the world. Seamlessly collaborate on coding projects with integrated
+            chat and debugging tools.
           </p>
           <div className="grid grid-cols-2 gap-4 mb-8">
             <div className="bg-gray-800 p-4 rounded-lg">
               <i className="ri-code-s-slash-line text-primary text-xl mb-2"></i>
               <h3 className="text-white font-medium mb-1">Multi-Language</h3>
-              <p className="text-gray-400 text-sm">Support for JavaScript, Python, Java, C++, and Ruby</p>
+              <p className="text-gray-400 text-sm">
+                Support for JavaScript, Python, Java, C++, and Ruby
+              </p>
             </div>
             <div className="bg-gray-800 p-4 rounded-lg">
               <i className="ri-group-line text-primary text-xl mb-2"></i>
               <h3 className="text-white font-medium mb-1">Real-time Collab</h3>
-              <p className="text-gray-400 text-sm">See changes instantly as teammates code</p>
+              <p className="text-gray-400 text-sm">
+                See changes instantly as teammates code
+              </p>
             </div>
             <div className="bg-gray-800 p-4 rounded-lg">
               <i className="ri-terminal-box-line text-primary text-xl mb-2"></i>
               <h3 className="text-white font-medium mb-1">Code Execution</h3>
-              <p className="text-gray-400 text-sm">Run your code securely in the browser</p>
+              <p className="text-gray-400 text-sm">
+                Run your code securely in the browser
+              </p>
             </div>
             <div className="bg-gray-800 p-4 rounded-lg">
               <i className="ri-chat-3-line text-primary text-xl mb-2"></i>
               <h3 className="text-white font-medium mb-1">Integrated Chat</h3>
-              <p className="text-gray-400 text-sm">Communicate with team members</p>
+              <p className="text-gray-400 text-sm">
+                Communicate with team members
+              </p>
             </div>
           </div>
         </div>
@@ -139,13 +166,16 @@ export default function AuthPage() {
               {activeTab === "login" ? "Welcome Back" : "Create Account"}
             </CardTitle>
             <CardDescription>
-              {activeTab === "login" 
-                ? "Sign in to your CodeCollab account" 
+              {activeTab === "login"
+                ? "Sign in to your CodeCollab account"
                 : "Join CodeCollab to start collaborating"}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "login" | "register")}>
+            <Tabs
+              value={activeTab}
+              onValueChange={(v) => setActiveTab(v as "login" | "register")}
+            >
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="login">Login</TabsTrigger>
                 <TabsTrigger value="register">Register</TabsTrigger>
@@ -153,7 +183,10 @@ export default function AuthPage() {
 
               <TabsContent value="login">
                 <Form {...loginForm}>
-                  <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+                  <form
+                    onSubmit={loginForm.handleSubmit(onLoginSubmit)}
+                    className="space-y-4"
+                  >
                     <FormField
                       control={loginForm.control}
                       name="username"
@@ -174,15 +207,19 @@ export default function AuthPage() {
                         <FormItem>
                           <FormLabel>Password</FormLabel>
                           <FormControl>
-                            <Input type="password" placeholder="********" {...field} />
+                            <Input
+                              type="password"
+                              placeholder="********"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    <Button 
-                      type="submit" 
-                      className="w-full" 
+                    <Button
+                      type="submit"
+                      className="w-full"
                       disabled={loginMutation.isPending}
                     >
                       {loginMutation.isPending ? (
@@ -196,7 +233,10 @@ export default function AuthPage() {
 
               <TabsContent value="register">
                 <Form {...registerForm}>
-                  <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
+                  <form
+                    onSubmit={registerForm.handleSubmit(onRegisterSubmit)}
+                    className="space-y-4"
+                  >
                     <FormField
                       control={registerForm.control}
                       name="username"
@@ -217,7 +257,11 @@ export default function AuthPage() {
                         <FormItem>
                           <FormLabel>Password</FormLabel>
                           <FormControl>
-                            <Input type="password" placeholder="Create a password" {...field} />
+                            <Input
+                              type="password"
+                              placeholder="Create a password"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -230,15 +274,19 @@ export default function AuthPage() {
                         <FormItem>
                           <FormLabel>Confirm Password</FormLabel>
                           <FormControl>
-                            <Input type="password" placeholder="Confirm your password" {...field} />
+                            <Input
+                              type="password"
+                              placeholder="Confirm your password"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                    <Button 
-                      type="submit" 
-                      className="w-full" 
+                    <Button
+                      type="submit"
+                      className="w-full"
                       disabled={registerMutation.isPending}
                     >
                       {registerMutation.isPending ? (
@@ -253,11 +301,15 @@ export default function AuthPage() {
           </CardContent>
           <CardFooter className="flex justify-center border-t border-gray-700 pt-4">
             <p className="text-sm text-gray-400">
-              {activeTab === "login" ? "Don't have an account? " : "Already have an account? "}
-              <Button 
-                variant="link" 
+              {activeTab === "login"
+                ? "Don't have an account? "
+                : "Already have an account? "}
+              <Button
+                variant="link"
                 className="p-0 text-primary"
-                onClick={() => setActiveTab(activeTab === "login" ? "register" : "login")}
+                onClick={() =>
+                  setActiveTab(activeTab === "login" ? "register" : "login")
+                }
               >
                 {activeTab === "login" ? "Register" : "Login"}
               </Button>

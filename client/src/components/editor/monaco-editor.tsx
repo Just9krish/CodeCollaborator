@@ -10,8 +10,12 @@ const loadMonacoScripts = async () => {
   await import("monaco-editor/esm/vs/language/json/json.worker");
   await import("monaco-editor/esm/vs/language/css/css.worker");
   await import("monaco-editor/esm/vs/language/html/html.worker");
-  await import("monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution");
-  await import("monaco-editor/esm/vs/basic-languages/python/python.contribution");
+  await import(
+    "monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution"
+  );
+  await import(
+    "monaco-editor/esm/vs/basic-languages/python/python.contribution"
+  );
   await import("monaco-editor/esm/vs/basic-languages/java/java.contribution");
   await import("monaco-editor/esm/vs/basic-languages/cpp/cpp.contribution");
   await import("monaco-editor/esm/vs/basic-languages/ruby/ruby.contribution");
@@ -23,10 +27,10 @@ type MonacoEditorProps = {
   fileId: number;
   readOnly?: boolean;
   onChange?: (value: string) => void;
-  participants?: Array<{ 
-    id: number; 
-    userId: number; 
-    username: string; 
+  participants?: Array<{
+    id: number;
+    userId: number;
+    username: string;
     cursor: CursorPosition | null;
     color: string;
   }>;
@@ -52,11 +56,12 @@ const generateUserColor = (username: string) => {
     "#EC4899", // Pink
     "#06B6D4", // Cyan
   ];
-  
+
   const hash = Array.from(username).reduce(
-    (acc, char) => acc + char.charCodeAt(0), 0
+    (acc, char) => acc + char.charCodeAt(0),
+    0
   );
-  
+
   return colors[hash % colors.length];
 };
 
@@ -66,25 +71,25 @@ export function MonacoEditor({
   fileId,
   readOnly = false,
   onChange,
-  participants = []
+  participants = [],
 }: MonacoEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const decorationsRef = useRef<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   // Initialize Monaco editor
   useEffect(() => {
     let mounted = true;
-    
+
     (async () => {
       try {
         await loadMonacoScripts();
-        
+
         if (!mounted || !containerRef.current) return;
-        
+
         const monacoLanguage = languageMap[language] || "javascript";
-        
+
         // Create the editor
         const editor = monaco.editor.create(containerRef.current, {
           value,
@@ -101,17 +106,17 @@ export function MonacoEditor({
           wordWrap: "on",
           padding: { top: 10 },
         });
-        
+
         editorRef.current = editor;
         setIsLoading(false);
-        
+
         // Handle content changes
         editor.onDidChangeModelContent(() => {
           if (onChange && !readOnly) {
             onChange(editor.getValue());
           }
         });
-        
+
         // Handle cursor position changes
         editor.onDidChangeCursorPosition((e) => {
           if (!readOnly) {
@@ -123,7 +128,7 @@ export function MonacoEditor({
             wsManager.updateCursor(cursor);
           }
         });
-        
+
         // Cleanup
         return () => {
           editor.dispose();
@@ -133,12 +138,12 @@ export function MonacoEditor({
         setIsLoading(false);
       }
     })();
-    
+
     return () => {
       mounted = false;
     };
   }, []);
-  
+
   // Update editor value when prop changes
   useEffect(() => {
     if (editorRef.current) {
@@ -148,7 +153,7 @@ export function MonacoEditor({
       }
     }
   }, [value]);
-  
+
   // Update editor language when prop changes
   useEffect(() => {
     if (editorRef.current) {
@@ -159,52 +164,64 @@ export function MonacoEditor({
       }
     }
   }, [language]);
-  
+
   // Update cursor decorations when participants change
   useEffect(() => {
     if (!editorRef.current) return;
-    
+
     // Clear previous decorations
     if (decorationsRef.current.length > 0) {
-      decorationsRef.current = editorRef.current.deltaDecorations(decorationsRef.current, []);
+      decorationsRef.current = editorRef.current.deltaDecorations(
+        decorationsRef.current,
+        []
+      );
     }
-    
+
     // Add cursor decorations for each participant
     const decorations = participants
-      .filter(participant => participant.cursor?.fileId === fileId)
-      .map(participant => {
+      .filter((participant) => participant.cursor?.fileId === fileId)
+      .map((participant) => {
         const { cursor, username, color } = participant;
         if (!cursor) return null;
-        
+
         return {
-          range: new monaco.Range(cursor.line, cursor.column, cursor.line, cursor.column + 1),
+          range: new monaco.Range(
+            cursor.line,
+            cursor.column,
+            cursor.line,
+            cursor.column + 1
+          ),
           options: {
             className: `cursor-${username}`,
             hoverMessage: { value: username },
             beforeContentClassName: "relative",
             minimap: {
               color: color || generateUserColor(username),
-              position: 1
+              position: 1,
             },
             overviewRuler: {
               color: color || generateUserColor(username),
-              position: 1
+              position: 1,
             },
             glyphMarginClassName: "flex items-center justify-center",
             glyphMarginHoverMessage: { value: username },
             isWholeLine: false,
-            inlineClassName: `relative border-l-2 border-${color || generateUserColor(username)}`
-          }
+            inlineClassName: `relative border-l-2 border-${color || generateUserColor(username)
+              }`,
+          },
         };
       })
       .filter(Boolean) as monaco.editor.IModelDeltaDecoration[];
-    
+
     // Apply the decorations
     if (decorations.length > 0) {
-      decorationsRef.current = editorRef.current.deltaDecorations([], decorations);
+      decorationsRef.current = editorRef.current.deltaDecorations(
+        [],
+        decorations
+      );
     }
   }, [participants, fileId]);
-  
+
   return (
     <div className="h-full relative">
       {isLoading && (
@@ -213,24 +230,26 @@ export function MonacoEditor({
         </div>
       )}
       <div ref={containerRef} className="h-full" />
-      
+
       {/* Visual cursor indicators for participants */}
       {participants
-        .filter(participant => participant.cursor?.fileId === fileId && editorRef.current)
-        .map(participant => (
+        .filter(
+          (participant) =>
+            participant.cursor?.fileId === fileId && editorRef.current
+        )
+        .map((participant) => (
           <div
             key={participant.id}
             className="absolute pointer-events-none z-20"
             style={{
-              left: '0', // Will be positioned by CSS
-              top: '0',  // Will be positioned by CSS
-              opacity: editorRef.current ? 1 : 0
+              left: "0", // Will be positioned by CSS
+              top: "0", // Will be positioned by CSS
+              opacity: editorRef.current ? 1 : 0,
             }}
           >
             {/* This is for visual reference - actual cursor positions are handled by Monaco decorations */}
           </div>
-        ))
-      }
+        ))}
     </div>
   );
 }

@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { wsManager } from "@/lib/websocket";
-import { User } from "@shared/schema";
 import { ExecutionResult } from "@/lib/websocket";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -42,7 +41,7 @@ type Message = {
 export function CollaborationPanel({
   sessionId,
   participants,
-  executionResult
+  executionResult,
 }: CollaborationPanelProps) {
   const [activeTab, setActiveTab] = useState("output");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -51,112 +50,130 @@ export function CollaborationPanel({
   const outputEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const { toast } = useToast();
-  
+
   // Fetch collaboration requests (only if current user is the session owner)
-  const { data: sessionData } = useQuery<{ session: { id: number; ownerId: number } }>({
+  const { data: sessionData } = useQuery<{
+    session: { id: number; ownerId: number; };
+  }>({
     queryKey: ["/api/sessions", sessionId],
-    enabled: !!user && !!sessionId
+    enabled: !!user && !!sessionId,
   });
-  
+
   const isSessionOwner = sessionData?.session.ownerId === user?.id;
-  
+
   // Fetch collaboration requests
-  const { data: collaborationRequests = [], refetch: refetchRequests } = useQuery<CollaborationRequest[]>({
-    queryKey: ["/api/sessions", sessionId, "collaboration-requests"],
-    queryFn: async () => {
-      const response = await fetch(`/api/sessions/${sessionId}/collaboration-requests`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch collaboration requests");
-      }
-      return response.json();
-    },
-    enabled: !!isSessionOwner && !!sessionId,
-  });
-  
+  const { data: collaborationRequests = [], refetch: refetchRequests } =
+    useQuery<CollaborationRequest[]>({
+      queryKey: ["/api/sessions", sessionId, "collaboration-requests"],
+      queryFn: async () => {
+        const response = await fetch(
+          `/api/sessions/${sessionId}/collaboration-requests`
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch collaboration requests");
+        }
+        return response.json();
+      },
+      enabled: !!isSessionOwner && !!sessionId,
+    });
+
   // Handle request response (accept/reject)
-  const handleRequestResponse = async (requestId: number, status: 'accepted' | 'rejected') => {
+  const handleRequestResponse = async (
+    requestId: number,
+    status: "accepted" | "rejected"
+  ) => {
     try {
       const response = await apiRequest(
-        "PATCH", 
-        `/api/sessions/${sessionId}/collaboration-requests/${requestId}`, 
+        "PATCH",
+        `/api/sessions/${sessionId}/collaboration-requests/${requestId}`,
         { status }
       );
-      
+
       if (response.ok) {
         toast({
           title: `Request ${status}`,
           description: `The collaboration request has been ${status}.`,
         });
-        
+
         // Refetch the collaboration requests
         refetchRequests();
       }
     } catch (error) {
       toast({
         title: "Failed to respond to request",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
-        variant: "destructive"
+        description:
+          error instanceof Error
+            ? error.message
+            : "An unexpected error occurred",
+        variant: "destructive",
       });
     }
   };
-  
+
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     if (messagesEndRef.current && activeTab === "chat") {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, activeTab]);
-  
+
   // Auto-scroll output when execution results change
   useEffect(() => {
     if (outputEndRef.current && activeTab === "output" && executionResult) {
       outputEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [executionResult, activeTab]);
-  
+
   // Subscribe to chat messages from websocket
   useEffect(() => {
     const unsubscribe = wsManager.on("chat_message", (data) => {
-      const sender = participants.find(p => p.userId === data.message.userId);
+      const sender = participants.find((p) => p.userId === data.message.userId);
       if (sender) {
-        setMessages(prev => [...prev, {
-          ...data.message,
-          username: sender.username,
-          createdAt: new Date(data.message.createdAt)
-        }]);
+        setMessages((prev) => [
+          ...prev,
+          {
+            ...data.message,
+            username: sender.username,
+            createdAt: new Date(data.message.createdAt),
+          },
+        ]);
       }
     });
-    
+
     return () => unsubscribe();
   }, [participants]);
-  
+
   const sendMessage = () => {
     if (!newMessage.trim() || !user) return;
-    
+
     wsManager.sendChatMessage(newMessage);
     setNewMessage("");
   };
-  
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
   };
-  
+
   // Get initials for avatar fallback
   const getInitials = (name: string) => {
     return name
-      .split(' ')
-      .map(part => part[0])
-      .join('')
+      .split(" ")
+      .map((part) => part[0])
+      .join("")
       .toUpperCase()
       .slice(0, 2);
   };
-  
+
   return (
     <div className="w-80 bg-gray-800 border-l border-gray-700 flex-shrink-0 flex flex-col overflow-hidden">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="flex-1 flex flex-col"
+      >
         <TabsList className="flex border-b border-gray-700 bg-transparent">
           <TabsTrigger
             value="output"
@@ -182,47 +199,67 @@ export function CollaborationPanel({
               className="flex-1 py-2 px-4 text-sm font-medium data-[state=active]:bg-gray-900 data-[state=active]:text-white data-[state=inactive]:text-gray-400 data-[state=inactive]:hover:text-white data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none relative"
             >
               Requests
-              {collaborationRequests.filter(req => req.status === 'pending').length > 0 && (
-                <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-white">
-                  {collaborationRequests.filter(req => req.status === 'pending').length}
-                </span>
-              )}
+              {collaborationRequests.filter((req) => req.status === "pending")
+                .length > 0 && (
+                  <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-white">
+                    {
+                      collaborationRequests.filter(
+                        (req) => req.status === "pending"
+                      ).length
+                    }
+                  </span>
+                )}
             </TabsTrigger>
           )}
         </TabsList>
-        
-        <TabsContent value="output" className="flex-1 overflow-auto p-4 font-mono text-sm bg-gray-900">
+
+        <TabsContent
+          value="output"
+          className="flex-1 overflow-auto p-4 font-mono text-sm bg-gray-900"
+        >
           {executionResult ? (
             <>
-              {executionResult.logs.map((log, index) => (
-                <div key={index} className="text-gray-300 whitespace-pre-wrap">{log}</div>
+              {executionResult.logs.map((log: any, index: number) => (
+                <div key={index} className="text-gray-300 whitespace-pre-wrap">
+                  {log}
+                </div>
               ))}
-              
+
               {executionResult.error && (
-                <div className="text-red-400 mt-2 whitespace-pre-wrap">{executionResult.error}</div>
+                <div className="text-red-400 mt-2 whitespace-pre-wrap">
+                  {executionResult.error}
+                </div>
               )}
-              
+
               {!executionResult.error && executionResult.output && (
-                <div className="text-white mt-2 whitespace-pre-wrap">{executionResult.output}</div>
+                <div className="text-white mt-2 whitespace-pre-wrap">
+                  {executionResult.output}
+                </div>
               )}
-              
+
               <div ref={outputEndRef} />
             </>
           ) : (
-            <div className="text-gray-400 italic">Run your code to see output here</div>
+            <div className="text-gray-400 italic">
+              Run your code to see output here
+            </div>
           )}
         </TabsContent>
-        
-        <TabsContent value="chat" className="flex-1 flex flex-col overflow-hidden bg-gray-900">
+
+        <TabsContent
+          value="chat"
+          className="flex-1 flex flex-col overflow-hidden bg-gray-900"
+        >
           <div className="flex-1 overflow-auto p-4">
             {messages.length > 0 ? (
               messages.map((message, index) => {
                 const isCurrentUser = user?.id === message.userId;
-                
+
                 return (
                   <div
                     key={index}
-                    className={`mb-3 flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
+                    className={`mb-3 flex ${isCurrentUser ? "justify-end" : "justify-start"
+                      }`}
                   >
                     {!isCurrentUser && (
                       <Avatar className="h-8 w-8 mr-2">
@@ -231,20 +268,26 @@ export function CollaborationPanel({
                         </AvatarFallback>
                       </Avatar>
                     )}
-                    
+
                     <div
-                      className={`max-w-[80%] px-3 py-2 rounded-lg ${
-                        isCurrentUser
-                          ? 'bg-primary text-white'
-                          : 'bg-gray-700 text-white'
-                      }`}
+                      className={`max-w-[80%] px-3 py-2 rounded-lg ${isCurrentUser
+                          ? "bg-primary text-white"
+                          : "bg-gray-700 text-white"
+                        }`}
                     >
                       {!isCurrentUser && (
-                        <div className="text-xs text-gray-300 mb-1">{message.username}</div>
+                        <div className="text-xs text-gray-300 mb-1">
+                          {message.username}
+                        </div>
                       )}
-                      <div className="text-sm whitespace-pre-wrap">{message.content}</div>
+                      <div className="text-sm whitespace-pre-wrap">
+                        {message.content}
+                      </div>
                       <div className="text-xs mt-1 opacity-70">
-                        {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(message.createdAt).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </div>
                     </div>
                   </div>
@@ -257,7 +300,7 @@ export function CollaborationPanel({
             )}
             <div ref={messagesEndRef} />
           </div>
-          
+
           <div className="p-3 border-t border-gray-700 bg-gray-800">
             <div className="flex space-x-2">
               <Input
@@ -278,19 +321,30 @@ export function CollaborationPanel({
             </div>
           </div>
         </TabsContent>
-        
-        <TabsContent value="people" className="flex-1 overflow-auto p-4 bg-gray-900">
+
+        <TabsContent
+          value="people"
+          className="flex-1 overflow-auto p-4 bg-gray-900"
+        >
           <div className="mb-4">
-            <h3 className="text-sm font-medium text-white mb-2">Active Collaborators</h3>
+            <h3 className="text-sm font-medium text-white mb-2">
+              Active Collaborators
+            </h3>
             <div className="space-y-2">
               {participants
-                .filter(p => p.isActive)
-                .map(participant => (
-                  <div key={participant.userId} className="flex items-center py-2">
+                .filter((p) => p.isActive)
+                .map((participant) => (
+                  <div
+                    key={participant.userId}
+                    className="flex items-center py-2"
+                  >
                     <Avatar className="h-8 w-8 mr-3">
-                      <AvatarFallback className={`${
-                        participant.userId === user?.id ? 'bg-primary' : 'bg-secondary'
-                      }`}>
+                      <AvatarFallback
+                        className={`${participant.userId === user?.id
+                            ? "bg-primary"
+                            : "bg-secondary"
+                          }`}
+                      >
                         {getInitials(participant.username)}
                       </AvatarFallback>
                     </Avatar>
@@ -306,21 +360,26 @@ export function CollaborationPanel({
                     </div>
                   </div>
                 ))}
-              
-              {participants.filter(p => p.isActive).length === 0 && (
-                <div className="text-gray-400 text-sm italic">No active collaborators</div>
+
+              {participants.filter((p) => p.isActive).length === 0 && (
+                <div className="text-gray-400 text-sm italic">
+                  No active collaborators
+                </div>
               )}
             </div>
           </div>
-          
-          {participants.some(p => !p.isActive) && (
+
+          {participants.some((p) => !p.isActive) && (
             <div>
               <h3 className="text-sm font-medium text-white mb-2">Inactive</h3>
               <div className="space-y-2">
                 {participants
-                  .filter(p => !p.isActive)
-                  .map(participant => (
-                    <div key={participant.userId} className="flex items-center py-2">
+                  .filter((p) => !p.isActive)
+                  .map((participant) => (
+                    <div
+                      key={participant.userId}
+                      className="flex items-center py-2"
+                    >
                       <Avatar className="h-8 w-8 mr-3">
                         <AvatarFallback className="bg-gray-600">
                           {getInitials(participant.username)}
@@ -341,25 +400,32 @@ export function CollaborationPanel({
             </div>
           )}
         </TabsContent>
-        
+
         {/* Requests Tab - only visible to session owner */}
         {isSessionOwner && (
-          <TabsContent value="requests" className="flex-1 overflow-auto p-4 bg-gray-900">
-            <h3 className="text-sm font-medium text-white mb-4">Collaboration Requests</h3>
-            
+          <TabsContent
+            value="requests"
+            className="flex-1 overflow-auto p-4 bg-gray-900"
+          >
+            <h3 className="text-sm font-medium text-white mb-4">
+              Collaboration Requests
+            </h3>
+
             {collaborationRequests.length > 0 ? (
               <div className="space-y-4">
                 {collaborationRequests
-                  .filter(req => req.status === 'pending')
-                  .map(request => (
-                    <div 
-                      key={request.id} 
+                  .filter((req) => req.status === "pending")
+                  .map((request) => (
+                    <div
+                      key={request.id}
                       className="bg-gray-800 rounded-lg p-3 border border-gray-700"
                     >
                       <div className="flex items-center mb-2">
                         <Avatar className="h-8 w-8 mr-2">
                           <AvatarFallback>
-                            {getInitials(request.username || `User ${request.fromUserId}`)}
+                            {getInitials(
+                              request.username || `User ${request.fromUserId}`
+                            )}
                           </AvatarFallback>
                         </Avatar>
                         <div>
@@ -370,72 +436,96 @@ export function CollaborationPanel({
                             {new Date(request.createdAt).toLocaleDateString()}
                           </div>
                         </div>
-                        <Badge className="ml-auto" variant="secondary">Pending</Badge>
+                        <Badge className="ml-auto" variant="secondary">
+                          Pending
+                        </Badge>
                       </div>
-                      
+
                       <div className="flex space-x-2 mt-3">
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="default"
                           className="w-full"
-                          onClick={() => handleRequestResponse(request.id, 'accepted')}
+                          onClick={() =>
+                            handleRequestResponse(request.id, "accepted")
+                          }
                         >
                           Accept
                         </Button>
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="outline"
                           className="w-full"
-                          onClick={() => handleRequestResponse(request.id, 'rejected')}
+                          onClick={() =>
+                            handleRequestResponse(request.id, "rejected")
+                          }
                         >
                           Reject
                         </Button>
                       </div>
                     </div>
                   ))}
-                
+
                 {/* Show previously handled requests */}
-                {collaborationRequests.some(req => req.status !== 'pending') && (
-                  <div className="mt-6">
-                    <h4 className="text-sm font-medium text-gray-400 mb-3">Previous Requests</h4>
-                    {collaborationRequests
-                      .filter(req => req.status !== 'pending')
-                      .map(request => (
-                        <div 
-                          key={request.id} 
-                          className="bg-gray-800 rounded-lg p-3 border border-gray-700 mb-2 opacity-70"
-                        >
-                          <div className="flex items-center">
-                            <Avatar className="h-6 w-6 mr-2">
-                              <AvatarFallback className="text-[10px]">
-                                {getInitials(request.username || `User ${request.fromUserId}`)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <div className="text-sm font-medium text-white">
-                                {request.username || `User ${request.fromUserId}`}
+                {collaborationRequests.some(
+                  (req) => req.status !== "pending"
+                ) && (
+                    <div className="mt-6">
+                      <h4 className="text-sm font-medium text-gray-400 mb-3">
+                        Previous Requests
+                      </h4>
+                      {collaborationRequests
+                        .filter((req) => req.status !== "pending")
+                        .map((request) => (
+                          <div
+                            key={request.id}
+                            className="bg-gray-800 rounded-lg p-3 border border-gray-700 mb-2 opacity-70"
+                          >
+                            <div className="flex items-center">
+                              <Avatar className="h-6 w-6 mr-2">
+                                <AvatarFallback className="text-[10px]">
+                                  {getInitials(
+                                    request.username ||
+                                    `User ${request.fromUserId}`
+                                  )}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <div className="text-sm font-medium text-white">
+                                  {request.username ||
+                                    `User ${request.fromUserId}`}
+                                </div>
+                                <div className="text-xs text-gray-400">
+                                  {new Date(
+                                    request.createdAt
+                                  ).toLocaleDateString()}
+                                </div>
                               </div>
-                              <div className="text-xs text-gray-400">
-                                {new Date(request.createdAt).toLocaleDateString()}
-                              </div>
+                              <Badge
+                                className="ml-auto"
+                                variant={
+                                  request.status === "accepted"
+                                    ? "default"
+                                    : "destructive"
+                                }
+                              >
+                                {request.status === "accepted"
+                                  ? "Accepted"
+                                  : "Rejected"}
+                              </Badge>
                             </div>
-                            <Badge 
-                              className="ml-auto" 
-                              variant={request.status === 'accepted' ? 'default' : 'destructive'}
-                            >
-                              {request.status === 'accepted' ? 'Accepted' : 'Rejected'}
-                            </Badge>
                           </div>
-                        </div>
-                      ))}
-                  </div>
-                )}
+                        ))}
+                    </div>
+                  )}
               </div>
             ) : (
               <div className="text-center text-gray-400 p-8">
                 <i className="ri-user-add-line text-4xl mb-2"></i>
                 <p>No collaboration requests yet</p>
-                <p className="text-xs mt-1">Requests will appear here when users want to join this project</p>
+                <p className="text-xs mt-1">
+                  Requests will appear here when users want to join this project
+                </p>
               </div>
             )}
           </TabsContent>

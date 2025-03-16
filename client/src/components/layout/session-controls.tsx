@@ -24,46 +24,46 @@ export function SessionControls({
   onLanguageChange,
   activeFile,
   onExecute,
-  isRunning
+  isRunning,
 }: SessionControlsProps) {
   const [name, setName] = useState(sessionName);
   const [isEditing, setIsEditing] = useState(false);
   const { toast } = useToast();
-  
+
   // Update local state when session name prop changes
   useEffect(() => {
     setName(sessionName);
   }, [sessionName]);
-  
+
   const handleNameChange = async () => {
     if (name === sessionName) {
       setIsEditing(false);
       return;
     }
-    
+
     try {
       await apiRequest("PATCH", `/api/sessions/${sessionId}`, {
-        name
+        name,
       });
-      
+
       toast({
         title: "Session renamed",
-        description: "Session name has been updated successfully."
+        description: "Session name has been updated successfully.",
       });
-      
+
       setIsEditing(false);
     } catch (error) {
       toast({
         title: "Rename failed",
         description: "Failed to rename session. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
-      
+
       // Reset to original name
       setName(sessionName);
     }
   };
-  
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       handleNameChange();
@@ -72,7 +72,7 @@ export function SessionControls({
       setIsEditing(false);
     }
   };
-  
+
   return (
     <div className="bg-gray-800 border-b border-gray-700 py-2 px-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -99,13 +99,13 @@ export function SessionControls({
               </button>
             )}
           </div>
-          
+
           <LanguageSelector
             currentLanguage={language}
             onSelect={onLanguageChange}
           />
         </div>
-        
+
         {/* Action Buttons */}
         <ActionButtons
           sessionId={sessionId}

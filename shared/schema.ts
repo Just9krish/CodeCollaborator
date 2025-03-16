@@ -1,4 +1,13 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { InferInsertModel, InferSelectModel } from "drizzle-orm";
+import {
+  pgTable,
+  text,
+  serial,
+  integer,
+  boolean,
+  timestamp,
+  jsonb,
+} from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -41,7 +50,19 @@ export const collaborationRequests = pgTable("collaboration_requests", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const insertCollaborationRequestSchema = createInsertSchema(collaborationRequests).pick({
+// Type for selecting data from the table
+export type CollaborationRequest = InferSelectModel<
+  typeof collaborationRequests
+>;
+
+// Type for inserting data into the table
+export type NewCollaborationRequest = InferInsertModel<
+  typeof collaborationRequests
+>;
+
+export const insertCollaborationRequestSchema = createInsertSchema(
+  collaborationRequests
+).pick({
   sessionId: true,
   fromUserId: true,
   status: true,
@@ -85,10 +106,30 @@ export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type Message = typeof messages.$inferSelect;
 
 export const languages = [
-  { id: "javascript", name: "JavaScript", icon: "ri-javascript-line", iconColor: "text-yellow-400" },
-  { id: "python", name: "Python", icon: "ri-python-line", iconColor: "text-blue-400" },
-  { id: "java", name: "Java", icon: "ri-code-s-slash-line", iconColor: "text-orange-400" },
-  { id: "cpp", name: "C++", icon: "ri-code-s-slash-line", iconColor: "text-blue-500" },
+  {
+    id: "javascript",
+    name: "JavaScript",
+    icon: "ri-javascript-line",
+    iconColor: "text-yellow-400",
+  },
+  {
+    id: "python",
+    name: "Python",
+    icon: "ri-python-line",
+    iconColor: "text-blue-400",
+  },
+  {
+    id: "java",
+    name: "Java",
+    icon: "ri-code-s-slash-line",
+    iconColor: "text-orange-400",
+  },
+  {
+    id: "cpp",
+    name: "C++",
+    icon: "ri-code-s-slash-line",
+    iconColor: "text-blue-500",
+  },
   { id: "ruby", name: "Ruby", icon: "ri-ruby-line", iconColor: "text-red-500" },
 ];
 
@@ -101,12 +142,16 @@ export const sessionParticipants = pgTable("session_participants", {
   joinedAt: timestamp("joined_at").notNull().defaultNow(),
 });
 
-export const insertSessionParticipantSchema = createInsertSchema(sessionParticipants).pick({
+export const insertSessionParticipantSchema = createInsertSchema(
+  sessionParticipants
+).pick({
   sessionId: true,
   userId: true,
   cursor: true,
   isActive: true,
 });
 
-export type InsertSessionParticipant = z.infer<typeof insertSessionParticipantSchema>;
+export type InsertSessionParticipant = z.infer<
+  typeof insertSessionParticipantSchema
+>;
 export type SessionParticipant = typeof sessionParticipants.$inferSelect;

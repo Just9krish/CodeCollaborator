@@ -14,7 +14,10 @@ export type ExecutionResult = {
  * Execute code in the specified language
  * This is a simplified implementation that uses sandboxed execution
  */
-export async function executeCode(code: string, language: string): Promise<ExecutionResult> {
+export async function executeCode(
+  code: string,
+  language: string
+): Promise<ExecutionResult> {
   try {
     switch (language) {
       case "javascript":
@@ -31,14 +34,14 @@ export async function executeCode(code: string, language: string): Promise<Execu
         return {
           output: "",
           error: `Unsupported language: ${language}`,
-          logs: []
+          logs: [],
         };
     }
   } catch (error) {
     return {
       output: "",
       error: error instanceof Error ? error.message : String(error),
-      logs: []
+      logs: [],
     };
   }
 }
@@ -56,16 +59,20 @@ function executeJavaScript(code: string): ExecutionResult {
     const sandbox = {
       console: {
         log: (...args: any[]) => {
-          const formattedArgs = args.map(arg => 
-            typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
-          ).join(' ');
+          const formattedArgs = args
+            .map((arg) =>
+              typeof arg === "object" ? JSON.stringify(arg) : String(arg)
+            )
+            .join(" ");
           logs.push(formattedArgs);
-        }
-      }
+        },
+      },
     };
 
     // Create a function from the code
-    const fn = new Function('sandbox', `
+    const fn = new Function(
+      "sandbox",
+      `
       with(sandbox) {
         try {
           ${code}
@@ -73,18 +80,19 @@ function executeJavaScript(code: string): ExecutionResult {
           return { error: e.message };
         }
       }
-    `);
-    
+    `
+    );
+
     // Execute the function
     const result = fn(sandbox);
-    
+
     if (result && result.error) {
       error = result.error;
     }
-    
+
     // Handle any program output
-    output = logs.join('\n');
-    
+    output = logs.join("\n");
+
     return { output, error, logs };
   } catch (e) {
     error = e instanceof Error ? e.message : String(e);
@@ -100,7 +108,7 @@ function executePython(code: string): ExecutionResult {
   // This is a mock implementation
   return {
     output: "Python execution is simulated in this environment.",
-    logs: ["Python output would appear here."]
+    logs: ["Python output would appear here."],
   };
 }
 
@@ -111,7 +119,7 @@ function executeJava(code: string): ExecutionResult {
   // This is a mock implementation
   return {
     output: "Java execution is simulated in this environment.",
-    logs: ["Java output would appear here."]
+    logs: ["Java output would appear here."],
   };
 }
 
@@ -122,7 +130,7 @@ function executeCpp(code: string): ExecutionResult {
   // This is a mock implementation
   return {
     output: "C++ execution is simulated in this environment.",
-    logs: ["C++ output would appear here."]
+    logs: ["C++ output would appear here."],
   };
 }
 
@@ -133,6 +141,6 @@ function executeRuby(code: string): ExecutionResult {
   // This is a mock implementation
   return {
     output: "Ruby execution is simulated in this environment.",
-    logs: ["Ruby output would appear here."]
+    logs: ["Ruby output would appear here."],
   };
 }

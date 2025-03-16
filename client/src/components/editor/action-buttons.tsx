@@ -2,16 +2,28 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Loader2 } from "lucide-react";
 import { ExecutionResult } from "@/lib/websocket";
 
 type ActionButtonsProps = {
   sessionId: number;
   sessionName: string;
-  activeFile: { id: number; content: string; name: string };
+  activeFile: { id: number; content: string; name: string; };
   language: string;
   onExecute: (result: ExecutionResult) => void;
   isRunning: boolean;
@@ -23,82 +35,82 @@ export function ActionButtons({
   activeFile,
   language,
   onExecute,
-  isRunning
+  isRunning,
 }: ActionButtonsProps) {
   const [isSharing, setIsSharing] = useState(false);
   const [shareableLink, setShareableLink] = useState("");
   const { toast } = useToast();
-  
+
   const saveCode = async () => {
     try {
       await apiRequest("PATCH", `/api/files/${activeFile.id}`, {
-        content: activeFile.content
+        content: activeFile.content,
       });
-      
+
       toast({
         title: "Code saved",
-        description: "Your code has been saved successfully."
+        description: "Your code has been saved successfully.",
       });
     } catch (error) {
       toast({
         title: "Save failed",
         description: "Failed to save code. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
-  
+
   const runCode = async () => {
     try {
       const response = await apiRequest("POST", "/api/execute", {
         code: activeFile.content,
-        language
+        language,
       });
-      
+
       const result = await response.json();
       onExecute(result);
     } catch (error) {
       toast({
         title: "Execution failed",
         description: "Failed to execute code. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
-  
+
   const forkProject = async () => {
     try {
       const response = await apiRequest("POST", "/api/sessions", {
         name: `Fork of ${sessionName}`,
         language,
-        isPublic: true
+        isPublic: true,
       });
-      
+
       const { session, files } = await response.json();
-      
+
       // Copy the content of the current file to the new session's default file
       if (files && files.length > 0) {
         await apiRequest("PATCH", `/api/files/${files[0].id}`, {
-          content: activeFile.content
+          content: activeFile.content,
         });
       }
-      
+
       toast({
         title: "Project forked",
-        description: "A copy of this project has been created in your account."
+        description: "A copy of this project has been created in your account.",
       });
-      
+
       // Redirect to the new session
       window.location.href = `/playground/${session.id}`;
     } catch (error) {
       toast({
         title: "Fork failed",
         description: "Failed to fork project. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
-  
+
   const shareProject = () => {
     // Generate shareable link
     const origin = window.location.origin;
@@ -106,15 +118,15 @@ export function ActionButtons({
     setShareableLink(link);
     setIsSharing(true);
   };
-  
+
   const copyLink = () => {
     navigator.clipboard.writeText(shareableLink);
     toast({
       title: "Link copied",
-      description: "Shareable link has been copied to clipboard."
+      description: "Shareable link has been copied to clipboard.",
     });
   };
-  
+
   return (
     <div className="flex items-center space-x-2">
       <TooltipProvider>
@@ -135,7 +147,7 @@ export function ActionButtons({
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
-      
+
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
@@ -154,7 +166,7 @@ export function ActionButtons({
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
-      
+
       <Button
         variant="default"
         size="sm"
@@ -169,7 +181,7 @@ export function ActionButtons({
         )}
         <span>Run</span>
       </Button>
-      
+
       <Button
         variant="secondary"
         size="sm"
@@ -179,7 +191,7 @@ export function ActionButtons({
         <i className="ri-share-line"></i>
         <span className="hidden sm:inline">Share</span>
       </Button>
-      
+
       <Dialog open={isSharing} onOpenChange={setIsSharing}>
         <DialogContent className="bg-gray-800 text-white border border-gray-700">
           <DialogHeader>
@@ -200,10 +212,7 @@ export function ActionButtons({
             </Button>
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsSharing(false)}
-            >
+            <Button variant="outline" onClick={() => setIsSharing(false)}>
               Close
             </Button>
           </DialogFooter>
