@@ -208,7 +208,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
     
     try {
-      const parsedBody = insertSessionSchema.safeParse(req.body);
+      // Create a modified schema without requiring ownerId since we'll set it from the authenticated user
+      const createSessionSchema = insertSessionSchema.omit({ ownerId: true });
+      const parsedBody = createSessionSchema.safeParse(req.body);
       
       if (!parsedBody.success) {
         return res.status(400).json({ message: "Invalid session data" });

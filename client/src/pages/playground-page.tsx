@@ -66,6 +66,7 @@ export default function PlaygroundPage() {
           name: "Untitled Project",
           language: "javascript",
           isPublic: true,
+          // ownerId is set by the server based on the authenticated user
         });
         return response.json();
       }
