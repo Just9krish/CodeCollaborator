@@ -5,9 +5,12 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { wsManager } from "@/lib/websocket";
 import { User } from "@shared/schema";
 import { ExecutionResult } from "@/lib/websocket";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 type CollaborationPanelProps = {
   sessionId: number;
@@ -17,6 +20,15 @@ type CollaborationPanelProps = {
     isActive: boolean;
   }>;
   executionResult?: ExecutionResult;
+};
+
+type CollaborationRequest = {
+  id: number;
+  sessionId: number;
+  fromUserId: number;
+  status: string;
+  createdAt: Date;
+  username?: string;
 };
 
 type Message = {
@@ -39,6 +51,54 @@ export function CollaborationPanel({
   const outputEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const { toast } = useToast();
+  
+  // Fetch collaboration requests (only if current user is the session owner)
+  const { data: sessionData } = useQuery<{ session: { id: number; ownerId: number } }>({
+    queryKey: ["/api/sessions", sessionId],
+    enabled: !!user && !!sessionId
+  });
+  
+  const isSessionOwner = sessionData?.session.ownerId === user?.id;
+  
+  // Fetch collaboration requests
+  const { data: collaborationRequests = [], refetch: refetchRequests } = useQuery<CollaborationRequest[]>({
+    queryKey: ["/api/sessions", sessionId, "collaboration-requests"],
+    queryFn: async () => {
+      const response = await fetch(`/api/sessions/${sessionId}/collaboration-requests`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch collaboration requests");
+      }
+      return response.json();
+    },
+    enabled: !!isSessionOwner && !!sessionId,
+  });
+  
+  // Handle request response (accept/reject)
+  const handleRequestResponse = async (requestId: number, status: 'accepted' | 'rejected') => {
+    try {
+      const response = await apiRequest(
+        "PATCH", 
+        `/api/sessions/${sessionId}/collaboration-requests/${requestId}`, 
+        { status }
+      );
+      
+      if (response.ok) {
+        toast({
+          title: `Request ${status}`,
+          description: `The collaboration request has been ${status}.`,
+        });
+        
+        // Refetch the collaboration requests
+        refetchRequests();
+      }
+    } catch (error) {
+      toast({
+        title: "Failed to respond to request",
+        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        variant: "destructive"
+      });
+    }
+  };
   
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -116,6 +176,19 @@ export function CollaborationPanel({
           >
             People
           </TabsTrigger>
+          {isSessionOwner && (
+            <TabsTrigger
+              value="requests"
+              className="flex-1 py-2 px-4 text-sm font-medium data-[state=active]:bg-gray-900 data-[state=active]:text-white data-[state=inactive]:text-gray-400 data-[state=inactive]:hover:text-white data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none relative"
+            >
+              Requests
+              {collaborationRequests.filter(req => req.status === 'pending').length > 0 && (
+                <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-white">
+                  {collaborationRequests.filter(req => req.status === 'pending').length}
+                </span>
+              )}
+            </TabsTrigger>
+          )}
         </TabsList>
         
         <TabsContent value="output" className="flex-1 overflow-auto p-4 font-mono text-sm bg-gray-900">
@@ -268,6 +341,105 @@ export function CollaborationPanel({
             </div>
           )}
         </TabsContent>
+        
+        {/* Requests Tab - only visible to session owner */}
+        {isSessionOwner && (
+          <TabsContent value="requests" className="flex-1 overflow-auto p-4 bg-gray-900">
+            <h3 className="text-sm font-medium text-white mb-4">Collaboration Requests</h3>
+            
+            {collaborationRequests.length > 0 ? (
+              <div className="space-y-4">
+                {collaborationRequests
+                  .filter(req => req.status === 'pending')
+                  .map(request => (
+                    <div 
+                      key={request.id} 
+                      className="bg-gray-800 rounded-lg p-3 border border-gray-700"
+                    >
+                      <div className="flex items-center mb-2">
+                        <Avatar className="h-8 w-8 mr-2">
+                          <AvatarFallback>
+                            {getInitials(request.username || `User ${request.fromUserId}`)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="text-sm font-medium text-white">
+                            {request.username || `User ${request.fromUserId}`}
+                          </div>
+                          <div className="text-xs text-gray-400">
+                            {new Date(request.createdAt).toLocaleDateString()}
+                          </div>
+                        </div>
+                        <Badge className="ml-auto" variant="secondary">Pending</Badge>
+                      </div>
+                      
+                      <div className="flex space-x-2 mt-3">
+                        <Button 
+                          size="sm" 
+                          variant="default"
+                          className="w-full"
+                          onClick={() => handleRequestResponse(request.id, 'accepted')}
+                        >
+                          Accept
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          className="w-full"
+                          onClick={() => handleRequestResponse(request.id, 'rejected')}
+                        >
+                          Reject
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                
+                {/* Show previously handled requests */}
+                {collaborationRequests.some(req => req.status !== 'pending') && (
+                  <div className="mt-6">
+                    <h4 className="text-sm font-medium text-gray-400 mb-3">Previous Requests</h4>
+                    {collaborationRequests
+                      .filter(req => req.status !== 'pending')
+                      .map(request => (
+                        <div 
+                          key={request.id} 
+                          className="bg-gray-800 rounded-lg p-3 border border-gray-700 mb-2 opacity-70"
+                        >
+                          <div className="flex items-center">
+                            <Avatar className="h-6 w-6 mr-2">
+                              <AvatarFallback className="text-[10px]">
+                                {getInitials(request.username || `User ${request.fromUserId}`)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <div className="text-sm font-medium text-white">
+                                {request.username || `User ${request.fromUserId}`}
+                              </div>
+                              <div className="text-xs text-gray-400">
+                                {new Date(request.createdAt).toLocaleDateString()}
+                              </div>
+                            </div>
+                            <Badge 
+                              className="ml-auto" 
+                              variant={request.status === 'accepted' ? 'default' : 'destructive'}
+                            >
+                              {request.status === 'accepted' ? 'Accepted' : 'Rejected'}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center text-gray-400 p-8">
+                <i className="ri-user-add-line text-4xl mb-2"></i>
+                <p>No collaboration requests yet</p>
+                <p className="text-xs mt-1">Requests will appear here when users want to join this project</p>
+              </div>
+            )}
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

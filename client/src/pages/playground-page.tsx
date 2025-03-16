@@ -373,7 +373,96 @@ export default function PlaygroundPage() {
     );
   }
   
-  // If error, show error message
+  // Handle collaboration request sending
+  const sendCollaborationRequest = async () => {
+    if (!accessError?.sessionId) return;
+    
+    try {
+      const response = await apiRequest(
+        "POST", 
+        `/api/sessions/${accessError.sessionId}/collaboration-requests`, 
+        {}
+      );
+      
+      if (response.ok) {
+        toast({
+          title: "Request sent",
+          description: "Your collaboration request has been sent to the project owner."
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Request failed",
+        description: error instanceof Error ? error.message : "Failed to send collaboration request",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  // If authentication required, show login prompt
+  if (accessError?.requiresAuth) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 p-4">
+        <div className="text-amber-500 text-6xl mb-4">
+          <i className="ri-lock-line"></i>
+        </div>
+        <h1 className="text-2xl font-bold text-white mb-2">Authentication Required</h1>
+        <p className="text-gray-400 mb-6">
+          You need to log in to access this private project.
+          Your session will be saved and you'll be redirected back after login.
+        </p>
+        <div className="space-y-4">
+          <Button 
+            onClick={() => {
+              // Save current URL to localStorage to redirect back after login
+              localStorage.setItem('redirectAfterLogin', window.location.pathname);
+              window.location.href = "/auth";
+            }}
+          >
+            Log In
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => window.location.href = "/"}
+          >
+            Return to Dashboard
+          </Button>
+        </div>
+      </div>
+    );
+  }
+  
+  // If access denied (requires a request), show collaboration request UI
+  if (accessError?.requiresRequest) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 p-4">
+        <div className="text-amber-500 text-6xl mb-4">
+          <i className="ri-team-line"></i>
+        </div>
+        <h1 className="text-2xl font-bold text-white mb-2">Private Project</h1>
+        <p className="text-gray-400 mb-6 text-center max-w-md">
+          This is a private project. You need to request access from the owner.
+          Once your request is approved, you'll be able to collaborate on this project.
+        </p>
+        <div className="space-y-4">
+          <Button 
+            onClick={sendCollaborationRequest}
+          >
+            <i className="ri-user-add-line mr-2"></i>
+            Request Collaboration Access
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={() => window.location.href = "/"}
+          >
+            Return to Dashboard
+          </Button>
+        </div>
+      </div>
+    );
+  }
+  
+  // Handle general errors
   if (error || !sessionData) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 p-4">

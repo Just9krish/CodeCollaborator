@@ -30,12 +30,31 @@ export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
   const [, navigate] = useLocation();
 
+  // Check for redirect after login
+  const [redirectPath, setRedirectPath] = useState<string | null>(null);
+  
+  // Get redirect path from localStorage on component mount
+  useEffect(() => {
+    const savedRedirect = localStorage.getItem('redirectAfterLogin');
+    if (savedRedirect) {
+      setRedirectPath(savedRedirect);
+    }
+  }, []);
+  
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
-      navigate("/");
+      // Clear the localStorage item
+      localStorage.removeItem('redirectAfterLogin');
+      
+      // Redirect to the saved path or fallback to home
+      if (redirectPath) {
+        navigate(redirectPath);
+      } else {
+        navigate("/");
+      }
     }
-  }, [user, navigate]);
+  }, [user, navigate, redirectPath]);
 
   // Login form
   const loginForm = useForm<z.infer<typeof loginSchema>>({
