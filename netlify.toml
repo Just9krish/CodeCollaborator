@@ -1,4 +1,0 @@
-[[redirects]]
-from = "/*"
-to = "/dist/index.js"
-status = 200
