@@ -631,6 +631,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const ownerClients = Array.from(clients).filter(
           (c) => c.userId === session.ownerId
         );
+
+        console.log("Collaboration request created:", request);
+        console.log("ownerClients", ownerClients);
+
         for (const client of ownerClients) {
           if (client.ws.readyState === WebSocket.OPEN) {
             client.ws.send(
@@ -651,6 +655,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     }
   );
+
+  app.get("/api/sessions/:sessionId/collaboration-requests", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    console.log("sdfsf");
+
+    try {
+      const sessionId = parseInt(req.params.sessionId);
+      const session = await storage.getSession(sessionId);
+
+      if (!session) {
+        return res.status(404).json({ message: "Session not found" });
+      }
+
+      // Only session owner can view collaboration requests
+      if (session.ownerId !== req.user!.id) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const requests = await storage.getCollaborationRequestsBySession(sessionId);
+      return res.status(200).json(requests);
+    } catch (error) {
+      console.error("Error fetching collaboration requests:", error);
+      return res.status(500).json({ message: "Failed to fetch collaboration requests" });
+    }
+  });
 
   app.get("/api/collaboration-requests", async (req, res) => {
     if (!req.isAuthenticated())
@@ -691,6 +723,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(401).json({ message: "Unauthorized" });
 
     try {
+      console.log(req.body);
       const requestId = parseInt(req.params.id);
       const request = await storage.getCollaborationRequest(requestId);
 

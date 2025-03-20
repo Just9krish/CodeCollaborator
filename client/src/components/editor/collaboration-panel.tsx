@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { wsManager } from "@/lib/websocket";
+import { User } from "@shared/schema";
 import { ExecutionResult } from "@/lib/websocket";
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -62,20 +63,27 @@ export function CollaborationPanel({
   const isSessionOwner = sessionData?.session.ownerId === user?.id;
 
   // Fetch collaboration requests
-  const { data: collaborationRequests = [], refetch: refetchRequests } =
-    useQuery<CollaborationRequest[]>({
-      queryKey: ["/api/sessions", sessionId, "collaboration-requests"],
-      queryFn: async () => {
-        const response = await fetch(
-          `/api/sessions/${sessionId}/collaboration-requests`
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch collaboration requests");
-        }
-        return response.json();
-      },
-      enabled: !!isSessionOwner && !!sessionId,
-    });
+  const {
+    data: collaborationRequests = { received: [], sent: [] },
+    refetch: refetchRequests,
+  } = useQuery<{
+    received: CollaborationRequest[];
+    sent: CollaborationRequest[];
+  }>({
+    queryKey: ["/api/collaboration-requests"],
+    queryFn: async () => {
+      const response = await fetch("/api/collaboration-requests");
+      if (!response.ok) {
+        throw new Error("Failed to fetch collaboration requests");
+      }
+      return response.json();
+    },
+    enabled: !!isSessionOwner && !!sessionId,
+    select: (data) => ({
+      received: data.received.filter((req) => req.sessionId === sessionId),
+      sent: data.sent,
+    }),
+  });
 
   // Handle request response (accept/reject)
   const handleRequestResponse = async (
@@ -199,11 +207,12 @@ export function CollaborationPanel({
               className="flex-1 py-2 px-4 text-sm font-medium data-[state=active]:bg-gray-900 data-[state=active]:text-white data-[state=inactive]:text-gray-400 data-[state=inactive]:hover:text-white data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none relative"
             >
               Requests
-              {collaborationRequests.filter((req) => req.status === "pending")
-                .length > 0 && (
+              {collaborationRequests.received.filter(
+                (req) => req.status === "pending"
+              ).length > 0 && (
                   <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-white">
                     {
-                      collaborationRequests.filter(
+                      collaborationRequests.received.filter(
                         (req) => req.status === "pending"
                       ).length
                     }
@@ -219,7 +228,7 @@ export function CollaborationPanel({
         >
           {executionResult ? (
             <>
-              {executionResult.logs.map((log: any, index: number) => (
+              {executionResult.logs.map((log, index) => (
                 <div key={index} className="text-gray-300 whitespace-pre-wrap">
                   {log}
                 </div>
@@ -411,9 +420,9 @@ export function CollaborationPanel({
               Collaboration Requests
             </h3>
 
-            {collaborationRequests.length > 0 ? (
+            {collaborationRequests.received.length > 0 ? (
               <div className="space-y-4">
-                {collaborationRequests
+                {collaborationRequests.received
                   .filter((req) => req.status === "pending")
                   .map((request) => (
                     <div
@@ -467,14 +476,14 @@ export function CollaborationPanel({
                   ))}
 
                 {/* Show previously handled requests */}
-                {collaborationRequests.some(
+                {collaborationRequests.received.some(
                   (req) => req.status !== "pending"
                 ) && (
                     <div className="mt-6">
                       <h4 className="text-sm font-medium text-gray-400 mb-3">
                         Previous Requests
                       </h4>
-                      {collaborationRequests
+                      {collaborationRequests.received
                         .filter((req) => req.status !== "pending")
                         .map((request) => (
                           <div

@@ -84,14 +84,14 @@ export default function HomePage() {
       queryClient.invalidateQueries({ queryKey: ["/api/sessions"] });
 
       setNewSessionId(data.id);
-      const url = `${window.location.origin}/playground/${data.id}`;
+      const url = `${window.location.origin}/playground/${data.session.id}`;
       setSharingUrl(url);
 
       setIsCreateDialogOpen(false);
       if (data.isPublic) {
         setIsShareDialogOpen(true);
       } else {
-        navigate(`/playground/${data.id}`);
+        navigate(`/playground/${data.session.id}`);
       }
     },
     onError: (error) => {

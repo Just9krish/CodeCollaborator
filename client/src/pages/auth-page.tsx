@@ -36,6 +36,7 @@ const loginSchema = insertUserSchema.extend({
 const registerSchema = loginSchema
   .extend({
     confirmPassword: z.string(),
+    email: z.string().email("Invalid email address"),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
@@ -52,11 +53,19 @@ export default function AuthPage() {
 
   // Get redirect path from localStorage on component mount
   useEffect(() => {
-    const savedRedirect = localStorage.getItem("redirectAfterLogin");
-    if (savedRedirect) {
-      setRedirectPath(savedRedirect);
+    if (user) {
+      const savedRedirect = localStorage.getItem("redirectAfterLogin");
+
+      // Clear stored redirect path after using it
+      localStorage.removeItem("redirectAfterLogin");
+
+      if (savedRedirect) {
+        navigate(savedRedirect);
+      } else {
+        navigate("/");
+      }
     }
-  }, []);
+  }, [user, navigate]);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -122,14 +131,16 @@ export default function AuthPage() {
             Collaborative Code Playground
           </h2>
           <p className="text-gray-300 mb-6">
-            Write, edit, and execute code in real-time with developers around the
-            world. Seamlessly collaborate on coding projects with integrated chat
-            and debugging tools.
+            Write, edit, and execute code in real-time with developers around
+            the world. Seamlessly collaborate on coding projects with integrated
+            chat and debugging tools.
           </p>
           <div className="grid grid-cols-2 gap-4 mb-8">
             {features.map((feature, index) => (
               <div key={index} className="bg-gray-800 p-4 rounded-lg">
-                <i className={`${feature.icon} ${feature.color} text-xl mb-2`}></i>
+                <i
+                  className={`${feature.icon} ${feature.color} text-xl mb-2`}
+                ></i>
                 <h3 className="text-white font-medium mb-1">{feature.title}</h3>
                 <p className="text-gray-400 text-sm">{feature.description}</p>
               </div>
@@ -225,6 +236,23 @@ export default function AuthPage() {
                           <FormLabel>Username</FormLabel>
                           <FormControl>
                             <Input placeholder="Choose a username" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={registerForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="email"
+                              placeholder="Enter your email"
+                              {...field}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
