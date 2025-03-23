@@ -1,16 +1,26 @@
 import { type IStorage } from "../types";
 import {
-  users, type User, type InsertUser,
-  sessions, type Session, type InsertSession,
-  files, type File, type InsertFile,
-  messages, type Message, type InsertMessage,
-  sessionParticipants, type SessionParticipant, type InsertSessionParticipant,
+  users,
+  type User,
+  type InsertUser,
+  sessions,
+  type Session,
+  type InsertSession,
+  files,
+  type File,
+  type InsertFile,
+  messages,
+  type Message,
+  type InsertMessage,
+  sessionParticipants,
+  type SessionParticipant,
+  type InsertSessionParticipant,
   collaborationRequests,
-  CollaborationRequest
+  CollaborationRequest,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
-import session, { Store } from 'express-session';
+import session, { Store } from "express-session";
 import createMemoryStore from "memorystore";
 
 const MemoryStore = createMemoryStore(session);
@@ -228,6 +238,19 @@ export class DBStorage implements IStorage {
       .from(collaborationRequests)
       .where(eq(collaborationRequests.sessionId, sessionId))
       .orderBy(collaborationRequests.createdAt);
+  }
+
+  async getCollaborationRequestByUser(userId: number, sessionId: number) {
+    return await db
+      .select()
+      .from(collaborationRequests)
+      .where(
+        and(
+          eq(collaborationRequests.fromUserId, userId),
+          eq(collaborationRequests.sessionId, sessionId),
+          eq(collaborationRequests.status, "pending")
+        )
+      );
   }
 
   async createCollaborationRequest(request: {

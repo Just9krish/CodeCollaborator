@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { File } from "@shared/schema";
 import { languages } from "@shared/schema";
 import {
@@ -139,6 +139,37 @@ export function FileExplorer({
   const [currentFile, setCurrentFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const content = e.target?.result as string;
+
+      try {
+        await apiRequest("POST", `/api/sessions/${sessionId}/files`, {
+          name: file.name,
+          content: content, // File content as text
+          sessionId,
+        });
+
+        toast({
+          title: "File Uploaded",
+          description: `${file.name} has been added.`,
+        });
+
+        onFileUpdated(); // Refresh file list
+      } catch (error) {
+        setError("Failed to upload file");
+        console.error("Upload error:", error);
+      }
+    };
+
+    reader.readAsText(file);
+  };
 
   const handleCreateFile = async () => {
     if (!newFileName) {
@@ -233,6 +264,16 @@ export function FileExplorer({
         className="hidden"
         onClick={() => setIsCreatingFile(true)}
       />
+
+      <input
+        id='upload-file-input'
+        type="file"
+        ref={fileInputRef}
+        className="hidden"
+        accept=".js,.py,.java,.cpp,.c,.rb,.html,.css,.json,.md,.txt"
+        onChange={handleFileUpload}
+      />
+
 
       {files.map((file) => (
         <FileItem

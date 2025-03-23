@@ -200,6 +200,8 @@ export default function PlaygroundPage() {
     };
 
     const onParticipantsUpdate = (data: any) => {
+      console.log({ data });
+      console.log({ sessionData });
       if (sessionData) {
         // Update participants with cursor information
         const participants = data.participants.map((p: SessionParticipant) => {
@@ -277,6 +279,31 @@ export default function PlaygroundPage() {
     refetch,
     user?.id,
   ]);
+
+  useEffect(() => {
+    const onRequestUpdate = (data: any) => {
+      // Handle the incoming request update event
+      toast({
+        title: "Collaboration Request Updated",
+        description: `User ${data.userId} has ${data.status === "approved" ? "joined" : "been rejected"
+          } the session.`,
+      });
+
+      // Refresh session data to reflect the latest participants
+      refetch();
+    };
+
+    // Register WebSocket event handler
+    const unsubscribeRequestUpdate = wsManager.on(
+      "request_update",
+      onRequestUpdate
+    );
+
+    return () => {
+      // Cleanup event listener when the component unmounts
+      unsubscribeRequestUpdate();
+    };
+  }, [refetch]);
 
   // Handle file selection
   const handleFileSelect = (fileId: number) => {
@@ -539,7 +566,6 @@ export default function PlaygroundPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-900">
-
       {/* Session Controls */}
       <SessionControls
         sessionId={sessionData.session.id}
@@ -576,12 +602,8 @@ export default function PlaygroundPage() {
               <button
                 className="p-1 text-gray-400 hover:text-white rounded hover:bg-gray-700 text-xs"
                 onClick={() => {
-                  // Show dialog to upload file
-                  toast({
-                    title: "Upload file",
-                    description:
-                      "Use the file explorer tools to upload a file.",
-                  });
+                  console.log("click");
+                  document.getElementById('upload-file-input')?.click();
                 }}
               >
                 <i className="ri-upload-2-line"></i>

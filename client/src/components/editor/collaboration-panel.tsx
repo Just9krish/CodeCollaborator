@@ -6,11 +6,9 @@ import { useAuth } from "@/hooks/use-auth";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { wsManager } from "@/lib/websocket";
-import { User } from "@shared/schema";
-import { ExecutionResult } from "@/lib/websocket";
+import { wsManager, ExecutionResult } from "@/lib/websocket";
 import { useQuery } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest } from "@/lib/queryClient";
 
 type CollaborationPanelProps = {
   sessionId: number;
@@ -93,7 +91,7 @@ export function CollaborationPanel({
     try {
       const response = await apiRequest(
         "PATCH",
-        `/api/sessions/${sessionId}/collaboration-requests/${requestId}`,
+        `/api/collaboration-requests/${requestId}`,
         { status }
       );
 
@@ -148,7 +146,24 @@ export function CollaborationPanel({
       }
     });
 
-    return () => unsubscribe();
+    const unsubscribeNewRequest = wsManager.on(
+      "new_collaboration_request",
+      (data) => {
+        if (data.sessionId === sessionId) {
+          // Refetch the requests to update the UI
+          refetchRequests();
+          toast({
+            title: "New Collaboration Request",
+            description: `${data.username} has requested to join.`,
+          });
+        }
+      }
+    );
+
+    return () => {
+      unsubscribe();
+      unsubscribeNewRequest();
+    };
   }, [participants]);
 
   const sendMessage = () => {
@@ -263,6 +278,7 @@ export function CollaborationPanel({
             {messages.length > 0 ? (
               messages.map((message, index) => {
                 const isCurrentUser = user?.id === message.userId;
+                console.log(message.username);
 
                 return (
                   <div
@@ -280,8 +296,8 @@ export function CollaborationPanel({
 
                     <div
                       className={`max-w-[80%] px-3 py-2 rounded-lg ${isCurrentUser
-                          ? "bg-primary text-white"
-                          : "bg-gray-700 text-white"
+                        ? "bg-background text-white"
+                        : "bg-gray-700 text-white"
                         }`}
                     >
                       {!isCurrentUser && (
@@ -344,14 +360,15 @@ export function CollaborationPanel({
                 .filter((p) => p.isActive)
                 .map((participant) => (
                   <div
+                    onClick={() => console.log(participant)}
                     key={participant.userId}
                     className="flex items-center py-2"
                   >
                     <Avatar className="h-8 w-8 mr-3">
                       <AvatarFallback
                         className={`${participant.userId === user?.id
-                            ? "bg-primary"
-                            : "bg-secondary"
+                          ? "bg-primary"
+                          : "bg-secondary"
                           }`}
                       >
                         {getInitials(participant.username)}

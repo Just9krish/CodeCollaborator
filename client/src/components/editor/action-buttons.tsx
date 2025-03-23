@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/tooltip";
 import { Loader2 } from "lucide-react";
 import { ExecutionResult } from "@/lib/websocket";
+import { FaPlay, FaShareNodes, FaClipboard } from "react-icons/fa6";
+import { FaSave, FaCodeBranch } from "react-icons/fa";
 
 type ActionButtonsProps = {
   sessionId: number;
@@ -138,7 +140,7 @@ export function ActionButtons({
               className="flex items-center space-x-1 text-sm text-gray-300 hover:text-white px-2 py-1 rounded"
               onClick={saveCode}
             >
-              <i className="ri-save-line"></i>
+              <FaSave />
               <span className="hidden sm:inline">Save</span>
             </Button>
           </TooltipTrigger>
@@ -157,7 +159,7 @@ export function ActionButtons({
               className="flex items-center space-x-1 text-sm text-gray-300 hover:text-white px-2 py-1 rounded"
               onClick={forkProject}
             >
-              <i className="ri-git-branch-line"></i>
+              <FaCodeBranch />
               <span className="hidden sm:inline">Fork</span>
             </Button>
           </TooltipTrigger>
@@ -168,27 +170,22 @@ export function ActionButtons({
       </TooltipProvider>
 
       <Button
-        variant="default"
         size="sm"
-        className="flex items-center space-x-1 text-sm bg-primary hover:bg-primary/90 text-white px-2 py-1 rounded"
+        className="flex items-center space-x-1 text-sm bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded"
         onClick={runCode}
         disabled={isRunning}
       >
-        {isRunning ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <i className="ri-play-fill"></i>
-        )}
+        {isRunning ? <Loader2 className="h-4 w-4 animate-spin" /> : <FaPlay />}
         <span>Run</span>
       </Button>
 
       <Button
         variant="secondary"
         size="sm"
-        className="flex items-center space-x-1 text-sm text-white bg-secondary hover:bg-secondary/90 px-2 py-1 rounded"
+        className="flex items-center space-x-1 text-sm text-white px-2 py-1 rounded"
         onClick={shareProject}
       >
-        <i className="ri-share-line"></i>
+        <FaShareNodes />
         <span className="hidden sm:inline">Share</span>
       </Button>
 
@@ -207,15 +204,10 @@ export function ActionButtons({
               className="bg-gray-900 border-gray-700 text-white"
             />
             <Button onClick={copyLink}>
-              <i className="ri-clipboard-line mr-1"></i>
+              <FaClipboard />
               Copy
             </Button>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsSharing(false)}>
-              Close
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

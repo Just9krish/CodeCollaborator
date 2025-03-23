@@ -224,6 +224,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
               });
             }
             break;
+
+          case "collaboration_request_sent":
+            broadcastToUser(message.ownerId, {
+              type: "new_collaboration_request",
+              request: message.request,
+            });
+            break;
+
+          case "collaboration_request_approved":
+            broadcastToUser(message.userId, {
+              type: "collaboration_request_approved",
+              session: message.session,
+            });
+            break;
         }
       } catch (error) {
         console.error("Error handling WebSocket message:", error);
@@ -249,6 +263,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       clients.delete(client);
     });
   });
+
+  function broadcastToUser(userId: number, message: any) {
+    clients.forEach((client) => {
+      if (client.userId === userId && client.ws.readyState === WebSocket.OPEN) {
+        client.ws.send(JSON.stringify(message));
+      }
+    });
+  }
 
   // Helper function to broadcast messages to all clients in a session
   function broadcastToSession(
@@ -597,11 +619,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // If the session is public, collaboration requests are not needed
         if (session.isPublic) {
-          return res
-            .status(400)
-            .json({
-              message: "Cannot request collaboration for public sessions",
-            });
+          return res.status(400).json({
+            message: "Cannot request collaboration for public sessions",
+          });
         }
 
         // Check if user already has an active request
@@ -613,11 +633,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
 
         if (existingRequest) {
-          return res
-            .status(409)
-            .json({
-              message: "You already have a pending request for this session",
-            });
+          return res.status(409).json({
+            message: "You already have a pending request for this session",
+          });
         }
 
         // Create collaboration request
@@ -656,65 +674,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   );
 
-  app.get("/api/sessions/:sessionId/collaboration-requests", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
+  app.get(
+    "/api/sessions/:sessionId/collaboration-requests",
+    async (req, res) => {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
 
-    console.log("sdfsf");
+      console.log("sdfsf");
+
+      try {
+        const sessionId = parseInt(req.params.sessionId);
+        const session = await storage.getSession(sessionId);
+
+        if (!session) {
+          return res.status(404).json({ message: "Session not found" });
+        }
+
+        // Only session owner can view collaboration requests
+        if (session.ownerId !== req.user!.id) {
+          return res.status(403).json({ message: "Forbidden" });
+        }
+
+        const requests = await storage.getCollaborationRequestsBySession(
+          sessionId
+        );
+        return res.status(200).json(requests);
+      } catch (error) {
+        console.error("Error fetching collaboration requests:", error);
+        return res
+          .status(500)
+          .json({ message: "Failed to fetch collaboration requests" });
+      }
+    }
+  );
+
+  app.post("/api/collaboration-requests", async (req, res) => {
+    if (!req.isAuthenticated())
+      return res.status(401).json({ message: "Unauthorized" });
 
     try {
-      const sessionId = parseInt(req.params.sessionId);
+      const { sessionId } = req.body;
       const session = await storage.getSession(sessionId);
 
       if (!session) {
         return res.status(404).json({ message: "Session not found" });
       }
 
-      // Only session owner can view collaboration requests
-      if (session.ownerId !== req.user!.id) {
-        return res.status(403).json({ message: "Forbidden" });
-      }
-
-      const requests = await storage.getCollaborationRequestsBySession(sessionId);
-      return res.status(200).json(requests);
-    } catch (error) {
-      console.error("Error fetching collaboration requests:", error);
-      return res.status(500).json({ message: "Failed to fetch collaboration requests" });
-    }
-  });
-
-  app.get("/api/collaboration-requests", async (req, res) => {
-    if (!req.isAuthenticated())
-      return res.status(401).json({ message: "Unauthorized" });
-
-    try {
-      // Get received requests (for sessions owned by the current user)
-      const ownedSessions = await storage.getSessions(req.user!.id);
-      const sessionIds = ownedSessions.map((s) => s.id);
-
-      let receivedRequests: any[] = [];
-      for (const sessionId of sessionIds) {
-        const requests = await storage.getCollaborationRequestsBySession(
-          sessionId
-        );
-        receivedRequests = [...receivedRequests, ...requests];
-      }
-
-      // Get sent requests
-      const sentRequests = await storage.getCollaborationRequestsByUser(
-        req.user!.id
+      // Prevent duplicate requests
+      const existingRequest = await storage.getCollaborationRequestByUser(
+        req.user!.id,
+        sessionId
       );
+      if (existingRequest) {
+        return res.status(400).json({ message: "Request already sent" });
+      }
 
-      return res.status(200).json({
-        received: receivedRequests,
-        sent: sentRequests,
+      // Create request
+      const newRequest = await storage.createCollaborationRequest({
+        fromUserId: req.user!.id,
+        sessionId,
+        status: "pending",
       });
+
+      const ownerClients = Array.from(clients).filter(
+        (c) => c.userId === session.ownerId
+      );
+      for (const client of ownerClients) {
+        if (client.ws.readyState === WebSocket.OPEN) {
+          client.ws.send(
+            JSON.stringify({
+              type: "new_collaboration_request",
+              request: newRequest,
+            })
+          );
+        }
+      }
+
+      return res.status(201).json(newRequest);
     } catch (error) {
-      console.error("Error fetching collaboration requests:", error);
-      return res
-        .status(500)
-        .json({ message: "Failed to fetch collaboration requests" });
+      console.error("Error sending collaboration request:", error);
+      return res.status(500).json({ message: "Failed to send request" });
     }
   });
 
@@ -723,7 +763,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(401).json({ message: "Unauthorized" });
 
     try {
-      console.log(req.body);
       const requestId = parseInt(req.params.id);
       const request = await storage.getCollaborationRequest(requestId);
 
@@ -781,7 +820,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           client.ws.send(
             JSON.stringify({
               type: "collaboration_request_update",
-              request: updatedRequest,
+              session: session,
+              // request: updatedRequest,
             })
           );
         }
