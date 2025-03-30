@@ -602,7 +602,6 @@ export default function PlaygroundPage() {
               <button
                 className="p-1 text-gray-400 hover:text-white rounded hover:bg-gray-700 text-xs"
                 onClick={() => {
-                  console.log("click");
                   document.getElementById('upload-file-input')?.click();
                 }}
               >

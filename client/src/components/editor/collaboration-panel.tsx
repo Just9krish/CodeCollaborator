@@ -61,27 +61,23 @@ export function CollaborationPanel({
   const isSessionOwner = sessionData?.session.ownerId === user?.id;
 
   // Fetch collaboration requests
-  const {
-    data: collaborationRequests = { received: [], sent: [] },
-    refetch: refetchRequests,
-  } = useQuery<{
-    received: CollaborationRequest[];
-    sent: CollaborationRequest[];
-  }>({
-    queryKey: ["/api/collaboration-requests"],
-    queryFn: async () => {
-      const response = await fetch("/api/collaboration-requests");
-      if (!response.ok) {
-        throw new Error("Failed to fetch collaboration requests");
-      }
-      return response.json();
-    },
-    enabled: !!isSessionOwner && !!sessionId,
-    select: (data) => ({
-      received: data.received.filter((req) => req.sessionId === sessionId),
-      sent: data.sent,
-    }),
-  });
+  const { data: collaborationRequests = [], refetch: refetchRequests } =
+    useQuery<CollaborationRequest[]>({
+      queryKey: ["/api/sessions", sessionId, "collaboration-requests"],
+      queryFn: async () => {
+        const response = await apiRequest(
+          "GET",
+          `/api/sessions/${sessionId}/collaboration-requests?status=pending`
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch collaboration requests");
+        }
+        return response.json();
+      },
+      enabled: !!isSessionOwner && !!sessionId,
+    });
+
+  console.log({ object: collaborationRequests });
 
   // Handle request response (accept/reject)
   const handleRequestResponse = async (
@@ -222,17 +218,11 @@ export function CollaborationPanel({
               className="flex-1 py-2 px-4 text-sm font-medium data-[state=active]:bg-gray-900 data-[state=active]:text-white data-[state=inactive]:text-gray-400 data-[state=inactive]:hover:text-white data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none relative"
             >
               Requests
-              {collaborationRequests.received.filter(
-                (req) => req.status === "pending"
-              ).length > 0 && (
-                  <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-white">
-                    {
-                      collaborationRequests.received.filter(
-                        (req) => req.status === "pending"
-                      ).length
-                    }
-                  </span>
-                )}
+              {collaborationRequests.length > 0 && (
+                <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-white">
+                  {collaborationRequests.length}
+                </span>
+              )}
             </TabsTrigger>
           )}
         </TabsList>
@@ -296,8 +286,8 @@ export function CollaborationPanel({
 
                     <div
                       className={`max-w-[80%] px-3 py-2 rounded-lg ${isCurrentUser
-                        ? "bg-background text-white"
-                        : "bg-gray-700 text-white"
+                          ? "bg-background text-white"
+                          : "bg-gray-700 text-white"
                         }`}
                     >
                       {!isCurrentUser && (
@@ -367,8 +357,8 @@ export function CollaborationPanel({
                     <Avatar className="h-8 w-8 mr-3">
                       <AvatarFallback
                         className={`${participant.userId === user?.id
-                          ? "bg-primary"
-                          : "bg-secondary"
+                            ? "bg-primary"
+                            : "bg-secondary"
                           }`}
                       >
                         {getInitials(participant.username)}
@@ -437,113 +427,58 @@ export function CollaborationPanel({
               Collaboration Requests
             </h3>
 
-            {collaborationRequests.received.length > 0 ? (
+            {collaborationRequests.length > 0 ? (
               <div className="space-y-4">
-                {collaborationRequests.received
-                  .filter((req) => req.status === "pending")
-                  .map((request) => (
-                    <div
-                      key={request.id}
-                      className="bg-gray-800 rounded-lg p-3 border border-gray-700"
-                    >
-                      <div className="flex items-center mb-2">
-                        <Avatar className="h-8 w-8 mr-2">
-                          <AvatarFallback>
-                            {getInitials(
-                              request.username || `User ${request.fromUserId}`
-                            )}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <div className="text-sm font-medium text-white">
-                            {request.username || `User ${request.fromUserId}`}
-                          </div>
-                          <div className="text-xs text-gray-400">
-                            {new Date(request.createdAt).toLocaleDateString()}
-                          </div>
+                {collaborationRequests.map((request) => (
+                  <div
+                    key={request.id}
+                    className="bg-gray-800 rounded-lg p-3 border border-gray-700"
+                  >
+                    <div className="flex items-center mb-2">
+                      <Avatar className="h-8 w-8 mr-2">
+                        <AvatarFallback>
+                          {getInitials(
+                            request.username || `User ${request.fromUserId}`
+                          )}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className="text-sm font-medium text-white">
+                          {request.username || `User ${request.fromUserId}`}
                         </div>
-                        <Badge className="ml-auto" variant="secondary">
-                          Pending
-                        </Badge>
+                        <div className="text-xs text-gray-400">
+                          {new Date(request.createdAt).toLocaleDateString()}
+                        </div>
                       </div>
-
-                      <div className="flex space-x-2 mt-3">
-                        <Button
-                          size="sm"
-                          variant="default"
-                          className="w-full"
-                          onClick={() =>
-                            handleRequestResponse(request.id, "accepted")
-                          }
-                        >
-                          Accept
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="w-full"
-                          onClick={() =>
-                            handleRequestResponse(request.id, "rejected")
-                          }
-                        >
-                          Reject
-                        </Button>
-                      </div>
+                      <Badge className="ml-auto" variant="secondary">
+                        Pending
+                      </Badge>
                     </div>
-                  ))}
 
-                {/* Show previously handled requests */}
-                {collaborationRequests.received.some(
-                  (req) => req.status !== "pending"
-                ) && (
-                    <div className="mt-6">
-                      <h4 className="text-sm font-medium text-gray-400 mb-3">
-                        Previous Requests
-                      </h4>
-                      {collaborationRequests.received
-                        .filter((req) => req.status !== "pending")
-                        .map((request) => (
-                          <div
-                            key={request.id}
-                            className="bg-gray-800 rounded-lg p-3 border border-gray-700 mb-2 opacity-70"
-                          >
-                            <div className="flex items-center">
-                              <Avatar className="h-6 w-6 mr-2">
-                                <AvatarFallback className="text-[10px]">
-                                  {getInitials(
-                                    request.username ||
-                                    `User ${request.fromUserId}`
-                                  )}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <div className="text-sm font-medium text-white">
-                                  {request.username ||
-                                    `User ${request.fromUserId}`}
-                                </div>
-                                <div className="text-xs text-gray-400">
-                                  {new Date(
-                                    request.createdAt
-                                  ).toLocaleDateString()}
-                                </div>
-                              </div>
-                              <Badge
-                                className="ml-auto"
-                                variant={
-                                  request.status === "accepted"
-                                    ? "default"
-                                    : "destructive"
-                                }
-                              >
-                                {request.status === "accepted"
-                                  ? "Accepted"
-                                  : "Rejected"}
-                              </Badge>
-                            </div>
-                          </div>
-                        ))}
+                    <div className="flex space-x-2 mt-3">
+                      <Button
+                        size="sm"
+                        variant="default"
+                        className="w-full"
+                        onClick={() =>
+                          handleRequestResponse(request.id, "accepted")
+                        }
+                      >
+                        Accept
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full"
+                        onClick={() =>
+                          handleRequestResponse(request.id, "rejected")
+                        }
+                      >
+                        Reject
+                      </Button>
                     </div>
-                  )}
+                  </div>
+                ))}
               </div>
             ) : (
               <div className="text-center text-gray-400 p-8">

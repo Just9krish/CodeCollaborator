@@ -681,11 +681,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      console.log("sdfsf");
-
       try {
         const sessionId = parseInt(req.params.sessionId);
         const session = await storage.getSession(sessionId);
+        const status = req.query.status as string;
+
+        console.log({ status });
 
         if (!session) {
           return res.status(404).json({ message: "Session not found" });
@@ -697,7 +698,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         const requests = await storage.getCollaborationRequestsBySession(
-          sessionId
+          sessionId,
+          status
         );
         return res.status(200).json(requests);
       } catch (error) {
@@ -708,55 +710,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     }
   );
-
-  app.post("/api/collaboration-requests", async (req, res) => {
-    if (!req.isAuthenticated())
-      return res.status(401).json({ message: "Unauthorized" });
-
-    try {
-      const { sessionId } = req.body;
-      const session = await storage.getSession(sessionId);
-
-      if (!session) {
-        return res.status(404).json({ message: "Session not found" });
-      }
-
-      // Prevent duplicate requests
-      const existingRequest = await storage.getCollaborationRequestByUser(
-        req.user!.id,
-        sessionId
-      );
-      if (existingRequest) {
-        return res.status(400).json({ message: "Request already sent" });
-      }
-
-      // Create request
-      const newRequest = await storage.createCollaborationRequest({
-        fromUserId: req.user!.id,
-        sessionId,
-        status: "pending",
-      });
-
-      const ownerClients = Array.from(clients).filter(
-        (c) => c.userId === session.ownerId
-      );
-      for (const client of ownerClients) {
-        if (client.ws.readyState === WebSocket.OPEN) {
-          client.ws.send(
-            JSON.stringify({
-              type: "new_collaboration_request",
-              request: newRequest,
-            })
-          );
-        }
-      }
-
-      return res.status(201).json(newRequest);
-    } catch (error) {
-      console.error("Error sending collaboration request:", error);
-      return res.status(500).json({ message: "Failed to send request" });
-    }
-  });
 
   app.patch("/api/collaboration-requests/:id", async (req, res) => {
     if (!req.isAuthenticated())

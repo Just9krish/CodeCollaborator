@@ -231,12 +231,18 @@ export class DBStorage implements IStorage {
   }
 
   async getCollaborationRequestsBySession(
-    sessionId: number
+    sessionId: number,
+    status?: string
   ): Promise<CollaborationRequest[]> {
     return await db
       .select()
       .from(collaborationRequests)
-      .where(eq(collaborationRequests.sessionId, sessionId))
+      .where(
+        and(
+          eq(collaborationRequests.sessionId, sessionId),
+          eq(collaborationRequests.status, status || "pending")
+        )
+      )
       .orderBy(collaborationRequests.createdAt);
   }
 
