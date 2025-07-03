@@ -390,10 +390,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // User has access, retrieve session data
       const files = await storage.getFilesBySession(sessionId);
-      const participants = await storage.getSessionParticipants(
-        sessionId,
-        true
-      );
+      const participants = await storage.getSessionParticipants(sessionId, false);
 
       return res.status(200).json({ session, files, participants });
     } catch (error) {

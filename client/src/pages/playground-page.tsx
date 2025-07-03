@@ -200,9 +200,8 @@ export default function PlaygroundPage() {
     };
 
     const onParticipantsUpdate = (data: any) => {
-      console.log({ data });
-      console.log({ sessionData });
       if (sessionData) {
+        console.log(sessionData.participants);
         // Update participants with cursor information
         const participants = data.participants.map((p: SessionParticipant) => {
           const existingParticipant = sessionData.participants.find(
@@ -222,9 +221,13 @@ export default function PlaygroundPage() {
           };
         });
 
+        console.log({ "funcs": participants });
+
         setEnhancedParticipants(participants);
       }
     };
+
+    console.log({ enhancedParticipants });
 
     const onFileCreated = () => {
       refetch();

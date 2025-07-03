@@ -58,6 +58,8 @@ export function CollaborationPanel({
     enabled: !!user && !!sessionId,
   });
 
+  console.log({ participants });
+
   const isSessionOwner = sessionData?.session.ownerId === user?.id;
 
   // Fetch collaboration requests
@@ -76,8 +78,6 @@ export function CollaborationPanel({
       },
       enabled: !!isSessionOwner && !!sessionId,
     });
-
-  console.log({ object: collaborationRequests });
 
   // Handle request response (accept/reject)
   const handleRequestResponse = async (
@@ -219,7 +219,7 @@ export function CollaborationPanel({
             >
               Requests
               {collaborationRequests.length > 0 && (
-                <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] text-white">
+                <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary-foreground text-primary text-[10px]">
                   {collaborationRequests.length}
                 </span>
               )}
@@ -268,7 +268,6 @@ export function CollaborationPanel({
             {messages.length > 0 ? (
               messages.map((message, index) => {
                 const isCurrentUser = user?.id === message.userId;
-                console.log(message.username);
 
                 return (
                   <div
@@ -286,8 +285,8 @@ export function CollaborationPanel({
 
                     <div
                       className={`max-w-[80%] px-3 py-2 rounded-lg ${isCurrentUser
-                          ? "bg-background text-white"
-                          : "bg-gray-700 text-white"
+                        ? "bg-background text-white"
+                        : "bg-gray-700 text-white"
                         }`}
                     >
                       {!isCurrentUser && (
@@ -357,8 +356,8 @@ export function CollaborationPanel({
                     <Avatar className="h-8 w-8 mr-3">
                       <AvatarFallback
                         className={`${participant.userId === user?.id
-                            ? "bg-primary"
-                            : "bg-secondary"
+                          ? "bg-primary"
+                          : "bg-secondary"
                           }`}
                       >
                         {getInitials(participant.username)}

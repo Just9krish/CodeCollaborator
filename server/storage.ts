@@ -154,10 +154,13 @@ export class DBStorage implements IStorage {
   ): Promise<SessionParticipant[]> {
     const filters = [eq(sessionParticipants.sessionId, sessionId)];
 
+    console.log({ activeOnly });
     // Conditionally add the isActive filter
     if (activeOnly) {
       filters.push(eq(sessionParticipants.isActive, true));
     }
+
+    console.log({ filters });
 
     // Apply filters using the and() operator within a single .where() call
     const query = db
