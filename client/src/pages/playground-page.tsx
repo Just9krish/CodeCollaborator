@@ -163,6 +163,19 @@ export default function PlaygroundPage() {
     }
   }, [sessionData, user, sessionId]);
 
+  // Process initial session data to set up enhanced participants
+  useEffect(() => {
+    if (sessionData?.participants) {
+      const participants = sessionData.participants.map((p: any) => ({
+        ...p,
+        username: p.username || `User ${p.userId}`,
+        cursor: cursorPositions.get(p.userId) || p.cursor,
+        color: generateUserColor(p.username || `User ${p.userId}`),
+      }));
+      setEnhancedParticipants(participants);
+    }
+  }, [sessionData, cursorPositions]);
+
   // Set active file when session data changes
   useEffect(() => {
     if (sessionData?.files && sessionData.files.length > 0 && !activeFileId) {
@@ -201,15 +214,10 @@ export default function PlaygroundPage() {
 
     const onParticipantsUpdate = (data: any) => {
       if (sessionData) {
-        console.log(sessionData.participants);
         // Update participants with cursor information
-        const participants = data.participants.map((p: SessionParticipant) => {
-          const existingParticipant = sessionData.participants.find(
-            (ep) => ep.userId === p.userId
-          );
-          const username = existingParticipant
-            ? (existingParticipant as any).username || `User ${p.userId}`
-            : `User ${p.userId}`;
+        const participants = data.participants.map((p: any) => {
+          // The participant data now includes username from the server
+          const username = p.username || `User ${p.userId}`;
 
           return {
             ...p,
@@ -221,13 +229,9 @@ export default function PlaygroundPage() {
           };
         });
 
-        console.log({ "funcs": participants });
-
         setEnhancedParticipants(participants);
       }
     };
-
-    console.log({ enhancedParticipants });
 
     const onFileCreated = () => {
       refetch();
@@ -296,36 +300,17 @@ export default function PlaygroundPage() {
       refetch();
     };
 
-    const onCollaborationRequest = (data: any) => {
-      // Handle new collaboration request
-      if (data.sessionId === sessionId) {
-        toast({
-          title: "New Collaboration Request",
-          description: `${data.request.username} has requested to join this session.`,
-        });
-
-        // Refresh session data to update the UI
-        refetch();
-      }
-    };
-
-    // Register WebSocket event handlers
+    // Register WebSocket event handler
     const unsubscribeRequestUpdate = wsManager.on(
       "request_update",
       onRequestUpdate
     );
 
-    const unsubscribeCollaborationRequest = wsManager.on(
-      "collaboration_request",
-      onCollaborationRequest
-    );
-
     return () => {
-      // Cleanup event listeners when the component unmounts
+      // Cleanup event listener when the component unmounts
       unsubscribeRequestUpdate();
-      unsubscribeCollaborationRequest();
     };
-  }, [refetch, sessionId]);
+  }, [refetch]);
 
   // Handle file selection
   const handleFileSelect = (fileId: number) => {

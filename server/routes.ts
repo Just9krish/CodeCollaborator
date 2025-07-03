@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { WebSocketServer, WebSocket } from "ws";
 import { setupAuth } from "./auth";
 import { executeCode } from "./code-executor";
+import { notificationService } from "./notification-service";
 import { z } from "zod";
 import {
   insertFileSchema,
@@ -42,6 +43,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     };
 
     clients.add(client);
+    notificationService.registerClient(client);
 
     ws.on("message", async (rawMessage) => {
       try {
@@ -132,7 +134,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               // Send active participants to all clients in the session
               broadcastToSession(message.sessionId, {
                 type: "participants_update",
-                participants: await storage.getSessionParticipants(
+                participants: await storage.getSessionParticipantsWithUsers(
                   message.sessionId,
                   true
                 ),
@@ -147,7 +149,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               // Notify other clients
               broadcastToSession(client.sessionId, {
                 type: "participants_update",
-                participants: await storage.getSessionParticipants(
+                participants: await storage.getSessionParticipantsWithUsers(
                   client.sessionId,
                   true
                 ),
@@ -160,7 +162,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           case "cursor_update":
             if (client.sessionId && client.userId > 0) {
               // Find the participant and update cursor
-              const participants = await storage.getSessionParticipants(
+              const participants = await storage.getSessionParticipantsWithUsers(
                 client.sessionId
               );
               const participant = participants.find(
@@ -253,7 +255,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Notify other clients
         broadcastToSession(client.sessionId, {
           type: "participants_update",
-          participants: await storage.getSessionParticipants(
+          participants: await storage.getSessionParticipantsWithUsers(
             client.sessionId,
             true
           ),
@@ -390,7 +392,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // User has access, retrieve session data
       const files = await storage.getFilesBySession(sessionId);
-      const participants = await storage.getSessionParticipants(sessionId, false);
+      const participants = await storage.getSessionParticipantsWithUsers(sessionId, false);
 
       return res.status(200).json({ session, files, participants });
     } catch (error) {
@@ -432,8 +434,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const sessionId = parseInt(req.params.id);
       const session = await storage.getSession(sessionId);
-
-      console.log({ sessionId, session });
 
       if (!session) {
         return res.status(404).json({ message: "Session not found" });
@@ -642,32 +642,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           status: "pending",
         });
 
-        // Notify the session owner via WebSocket
-        const ownerClients = Array.from(clients).filter(
-          (c) => c.userId === session.ownerId
+        // Create notification for the session owner
+        await notificationService.notifyCollaborationRequest(
+          sessionId,
+          req.user!.id,
+          session.ownerId,
+          session.name
         );
-
-        console.log("Collaboration request created:", request);
-        console.log("ownerClients", ownerClients);
-
-        // Get the username of the requester
-        const requester = await storage.getUser(request.fromUserId);
-        const requesterUsername = requester?.username || `User ${request.fromUserId}`;
-
-        for (const client of ownerClients) {
-          if (client.ws.readyState === WebSocket.OPEN) {
-            client.ws.send(
-              JSON.stringify({
-                type: "collaboration_request",
-                request: {
-                  ...request,
-                  username: requesterUsername,
-                },
-                sessionId: sessionId,
-              })
-            );
-          }
-        }
 
         return res.status(201).json(request);
       } catch (error) {
@@ -690,8 +671,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const sessionId = parseInt(req.params.sessionId);
         const session = await storage.getSession(sessionId);
         const status = req.query.status as string;
-
-        console.log({ status });
 
         if (!session) {
           return res.status(404).json({ message: "Session not found" });
@@ -781,21 +760,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Notify the requesting user
-      const requesterClients = Array.from(clients).filter(
-        (c) => c.userId === request.fromUserId
+      // Create notification for the requesting user
+      await notificationService.notifyRequestResponse(
+        session.id,
+        req.user!.id,
+        request.fromUserId,
+        status,
+        session.name
       );
-      for (const client of requesterClients) {
-        if (client.ws.readyState === WebSocket.OPEN) {
-          client.ws.send(
-            JSON.stringify({
-              type: "collaboration_request_update",
-              session: session,
-              // request: updatedRequest,
-            })
-          );
-        }
-      }
 
       return res.status(200).json(updatedRequest);
     } catch (error) {
@@ -803,6 +775,104 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res
         .status(500)
         .json({ message: "Failed to update collaboration request" });
+    }
+  });
+
+  // Notification endpoints
+  app.get("/api/notifications", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const unreadOnly = req.query.unread === "true";
+      const notifications = await storage.getNotifications(req.user!.id, unreadOnly);
+      return res.status(200).json(notifications);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      return res.status(500).json({ message: "Failed to fetch notifications" });
+    }
+  });
+
+  app.get("/api/notifications/unread-count", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const count = await storage.getUnreadNotificationCount(req.user!.id);
+      return res.status(200).json({ count });
+    } catch (error) {
+      console.error("Error fetching unread count:", error);
+      return res.status(500).json({ message: "Failed to fetch unread count" });
+    }
+  });
+
+  app.patch("/api/notifications/:id/read", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const notificationId = parseInt(req.params.id);
+      const notification = await storage.getNotification(notificationId);
+
+      if (!notification) {
+        return res.status(404).json({ message: "Notification not found" });
+      }
+
+      if (notification.userId !== req.user!.id) {
+        return res.status(403).json({ message: "Not authorized to update this notification" });
+      }
+
+      const updatedNotification = await storage.markNotificationAsRead(notificationId);
+      return res.status(200).json(updatedNotification);
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      return res.status(500).json({ message: "Failed to mark notification as read" });
+    }
+  });
+
+  app.patch("/api/notifications/read-all", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      await storage.markAllNotificationsAsRead(req.user!.id);
+      return res.status(200).json({ message: "All notifications marked as read" });
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+      return res.status(500).json({ message: "Failed to mark all notifications as read" });
+    }
+  });
+
+  app.delete("/api/notifications/:id", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    try {
+      const notificationId = parseInt(req.params.id);
+      const notification = await storage.getNotification(notificationId);
+
+      if (!notification) {
+        return res.status(404).json({ message: "Notification not found" });
+      }
+
+      if (notification.userId !== req.user!.id) {
+        return res.status(403).json({ message: "Not authorized to delete this notification" });
+      }
+
+      const success = await storage.deleteNotification(notificationId);
+      if (success) {
+        return res.status(200).json({ message: "Notification deleted" });
+      } else {
+        return res.status(500).json({ message: "Failed to delete notification" });
+      }
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+      return res.status(500).json({ message: "Failed to delete notification" });
     }
   });
 

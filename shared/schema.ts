@@ -162,3 +162,28 @@ export type InsertSessionParticipant = z.infer<
   typeof insertSessionParticipantSchema
 >;
 export type SessionParticipant = typeof sessionParticipants.$inferSelect;
+
+// Notifications table
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(), // Recipient of the notification
+  type: text("type").notNull(), // e.g., "collaboration_request", "request_accepted", "request_rejected", "session_invite", etc.
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  data: jsonb("data"), // Additional data like sessionId, fromUserId, etc.
+  isRead: boolean("is_read").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const insertNotificationSchema = createInsertSchema(notifications).pick({
+  userId: true,
+  type: true,
+  title: true,
+  message: true,
+  data: true,
+  isRead: true,
+});
+
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type Notification = typeof notifications.$inferSelect;

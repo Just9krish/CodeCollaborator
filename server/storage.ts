@@ -17,9 +17,12 @@ import {
   type InsertSessionParticipant,
   collaborationRequests,
   CollaborationRequest,
+  notifications,
+  type Notification,
+  type InsertNotification,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import session, { Store } from "express-session";
 import createMemoryStore from "memorystore";
 
@@ -97,7 +100,6 @@ export class DBStorage implements IStorage {
       .where(eq(collaborationRequests.sessionId, id));
     await db.delete(files).where(eq(files.sessionId, id));
     const result = await db.delete(sessions).where(eq(sessions.id, id));
-    console.log(!!result);
     return !!result;
   }
 
@@ -154,13 +156,10 @@ export class DBStorage implements IStorage {
   ): Promise<SessionParticipant[]> {
     const filters = [eq(sessionParticipants.sessionId, sessionId)];
 
-    console.log({ activeOnly });
     // Conditionally add the isActive filter
     if (activeOnly) {
       filters.push(eq(sessionParticipants.isActive, true));
     }
-
-    console.log({ filters });
 
     // Apply filters using the and() operator within a single .where() call
     const query = db
@@ -169,6 +168,35 @@ export class DBStorage implements IStorage {
       .where(and(...filters));
 
     // Execute and return the query results
+    return await query;
+  }
+
+  // Get session participants with user information
+  async getSessionParticipantsWithUsers(
+    sessionId: number,
+    activeOnly: boolean = false
+  ): Promise<(SessionParticipant & { username: string; })[]> {
+    const filters = [eq(sessionParticipants.sessionId, sessionId)];
+
+    if (activeOnly) {
+      filters.push(eq(sessionParticipants.isActive, true));
+    }
+
+    // Join with users table to get usernames
+    const query = db
+      .select({
+        id: sessionParticipants.id,
+        sessionId: sessionParticipants.sessionId,
+        userId: sessionParticipants.userId,
+        cursor: sessionParticipants.cursor,
+        isActive: sessionParticipants.isActive,
+        joinedAt: sessionParticipants.joinedAt,
+        username: users.username,
+      })
+      .from(sessionParticipants)
+      .innerJoin(users, eq(sessionParticipants.userId, users.id))
+      .where(and(...filters));
+
     return await query;
   }
 
@@ -290,6 +318,60 @@ export class DBStorage implements IStorage {
       .where(eq(collaborationRequests.id, id))
       .returning();
     return result[0];
+  }
+
+  // Notification operations
+  async getNotifications(userId: number, unreadOnly: boolean = false): Promise<Notification[]> {
+    const filters = [eq(notifications.userId, userId)];
+
+    if (unreadOnly) {
+      filters.push(eq(notifications.isRead, false));
+    }
+
+    return await db
+      .select()
+      .from(notifications)
+      .where(and(...filters))
+      .orderBy(notifications.createdAt);
+  }
+
+  async getNotification(id: number): Promise<Notification | undefined> {
+    const result = await db.select().from(notifications).where(eq(notifications.id, id));
+    return result[0];
+  }
+
+  async createNotification(notification: InsertNotification): Promise<Notification> {
+    const result = await db.insert(notifications).values(notification).returning();
+    return result[0];
+  }
+
+  async markNotificationAsRead(id: number): Promise<Notification | undefined> {
+    const result = await db
+      .update(notifications)
+      .set({ isRead: true })
+      .where(eq(notifications.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async markAllNotificationsAsRead(userId: number): Promise<void> {
+    await db
+      .update(notifications)
+      .set({ isRead: true })
+      .where(eq(notifications.userId, userId));
+  }
+
+  async deleteNotification(id: number): Promise<boolean> {
+    const result = await db.delete(notifications).where(eq(notifications.id, id));
+    return !!result;
+  }
+
+  async getUnreadNotificationCount(userId: number): Promise<number> {
+    const result = await db
+      .select({ count: sql`count(*)` })
+      .from(notifications)
+      .where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)));
+    return Number(result[0]?.count || 0);
   }
 }
 
