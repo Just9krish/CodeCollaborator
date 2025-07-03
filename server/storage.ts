@@ -237,15 +237,17 @@ export class DBStorage implements IStorage {
     sessionId: number,
     status?: string
   ): Promise<CollaborationRequest[]> {
+    const filters = [eq(collaborationRequests.sessionId, sessionId)];
+
+    // Only add status filter if status is provided
+    if (status) {
+      filters.push(eq(collaborationRequests.status, status));
+    }
+
     return await db
       .select()
       .from(collaborationRequests)
-      .where(
-        and(
-          eq(collaborationRequests.sessionId, sessionId),
-          eq(collaborationRequests.status, status || "pending")
-        )
-      )
+      .where(and(...filters))
       .orderBy(collaborationRequests.createdAt);
   }
 

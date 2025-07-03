@@ -650,12 +650,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log("Collaboration request created:", request);
         console.log("ownerClients", ownerClients);
 
+        // Get the username of the requester
+        const requester = await storage.getUser(request.fromUserId);
+        const requesterUsername = requester?.username || `User ${request.fromUserId}`;
+
         for (const client of ownerClients) {
           if (client.ws.readyState === WebSocket.OPEN) {
             client.ws.send(
               JSON.stringify({
                 type: "collaboration_request",
-                request,
+                request: {
+                  ...request,
+                  username: requesterUsername,
+                },
+                sessionId: sessionId,
               })
             );
           }
@@ -698,7 +706,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           sessionId,
           status
         );
-        return res.status(200).json(requests);
+
+        // Add username to each request
+        const requestsWithUsernames = await Promise.all(
+          requests.map(async (request) => {
+            const requester = await storage.getUser(request.fromUserId);
+            return {
+              ...request,
+              username: requester?.username || `User ${request.fromUserId}`,
+            };
+          })
+        );
+
+        return res.status(200).json(requestsWithUsernames);
       } catch (error) {
         console.error("Error fetching collaboration requests:", error);
         return res

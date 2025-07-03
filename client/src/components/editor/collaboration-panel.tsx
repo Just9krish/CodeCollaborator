@@ -143,14 +143,14 @@ export function CollaborationPanel({
     });
 
     const unsubscribeNewRequest = wsManager.on(
-      "new_collaboration_request",
+      "collaboration_request",
       (data) => {
         if (data.sessionId === sessionId) {
           // Refetch the requests to update the UI
           refetchRequests();
           toast({
             title: "New Collaboration Request",
-            description: `${data.username} has requested to join.`,
+            description: `${data.request.username} has requested to join.`,
           });
         }
       }
