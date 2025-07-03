@@ -16,7 +16,8 @@ type WebSocketMessage =
   | { type: "leave_session"; }
   | { type: "cursor_update"; cursor: CursorPosition; }
   | { type: "code_change"; fileId: number; content: string; }
-  | { type: "chat_message"; content: string; };
+  | { type: "chat_message"; content: string; }
+  | { type: "notification"; notification: any; };
 
 class WebSocketManager {
   private socket: WebSocket | null = null;

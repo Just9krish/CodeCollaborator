@@ -296,36 +296,17 @@ export default function PlaygroundPage() {
       refetch();
     };
 
-    const onCollaborationRequest = (data: any) => {
-      // Handle new collaboration request
-      if (data.sessionId === sessionId) {
-        toast({
-          title: "New Collaboration Request",
-          description: `${data.request.username} has requested to join this session.`,
-        });
-
-        // Refresh session data to update the UI
-        refetch();
-      }
-    };
-
-    // Register WebSocket event handlers
+    // Register WebSocket event handler
     const unsubscribeRequestUpdate = wsManager.on(
       "request_update",
       onRequestUpdate
     );
 
-    const unsubscribeCollaborationRequest = wsManager.on(
-      "collaboration_request",
-      onCollaborationRequest
-    );
-
     return () => {
-      // Cleanup event listeners when the component unmounts
+      // Cleanup event listener when the component unmounts
       unsubscribeRequestUpdate();
-      unsubscribeCollaborationRequest();
     };
-  }, [refetch, sessionId]);
+  }, [refetch]);
 
   // Handle file selection
   const handleFileSelect = (fileId: number) => {

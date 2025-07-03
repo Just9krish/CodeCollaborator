@@ -17,6 +17,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { NotificationBell } from "@/components/ui/notification-bell";
 
 export function AppHeader() {
   const { user, logoutMutation } = useAuth();
@@ -81,13 +82,7 @@ export function AppHeader() {
             <i className="ri-question-line text-lg"></i>
           </Button>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            className="p-1.5 text-gray-400 hover:text-white rounded-full hover:bg-gray-700"
-          >
-            <i className="ri-notification-3-line text-lg"></i>
-          </Button>
+          <NotificationBell />
 
           {user && (
             <DropdownMenu>
