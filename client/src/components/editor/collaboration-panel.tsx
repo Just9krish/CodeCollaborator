@@ -58,8 +58,6 @@ export function CollaborationPanel({
     enabled: !!user && !!sessionId,
   });
 
-  console.log({ participants });
-
   const isSessionOwner = sessionData?.session.ownerId === user?.id;
 
   // Fetch collaboration requests

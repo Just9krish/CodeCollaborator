@@ -214,7 +214,6 @@ export default function PlaygroundPage() {
 
     const onParticipantsUpdate = (data: any) => {
       if (sessionData) {
-        console.log(sessionData.participants);
         // Update participants with cursor information
         const participants = data.participants.map((p: any) => {
           // The participant data now includes username from the server
@@ -230,13 +229,9 @@ export default function PlaygroundPage() {
           };
         });
 
-        console.log({ "funcs": participants });
-
         setEnhancedParticipants(participants);
       }
     };
-
-    console.log({ enhancedParticipants });
 
     const onFileCreated = () => {
       refetch();

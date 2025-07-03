@@ -435,8 +435,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const sessionId = parseInt(req.params.id);
       const session = await storage.getSession(sessionId);
 
-      console.log({ sessionId, session });
-
       if (!session) {
         return res.status(404).json({ message: "Session not found" });
       }
@@ -652,8 +650,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           session.name
         );
 
-        console.log("Collaboration request created:", request);
-
         return res.status(201).json(request);
       } catch (error) {
         console.error("Error creating collaboration request:", error);
@@ -675,8 +671,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const sessionId = parseInt(req.params.sessionId);
         const session = await storage.getSession(sessionId);
         const status = req.query.status as string;
-
-        console.log({ status });
 
         if (!session) {
           return res.status(404).json({ message: "Session not found" });
