@@ -163,6 +163,19 @@ export default function PlaygroundPage() {
     }
   }, [sessionData, user, sessionId]);
 
+  // Process initial session data to set up enhanced participants
+  useEffect(() => {
+    if (sessionData?.participants) {
+      const participants = sessionData.participants.map((p: any) => ({
+        ...p,
+        username: p.username || `User ${p.userId}`,
+        cursor: cursorPositions.get(p.userId) || p.cursor,
+        color: generateUserColor(p.username || `User ${p.userId}`),
+      }));
+      setEnhancedParticipants(participants);
+    }
+  }, [sessionData, cursorPositions]);
+
   // Set active file when session data changes
   useEffect(() => {
     if (sessionData?.files && sessionData.files.length > 0 && !activeFileId) {
@@ -203,13 +216,9 @@ export default function PlaygroundPage() {
       if (sessionData) {
         console.log(sessionData.participants);
         // Update participants with cursor information
-        const participants = data.participants.map((p: SessionParticipant) => {
-          const existingParticipant = sessionData.participants.find(
-            (ep) => ep.userId === p.userId
-          );
-          const username = existingParticipant
-            ? (existingParticipant as any).username || `User ${p.userId}`
-            : `User ${p.userId}`;
+        const participants = data.participants.map((p: any) => {
+          // The participant data now includes username from the server
+          const username = p.username || `User ${p.userId}`;
 
           return {
             ...p,

@@ -175,6 +175,35 @@ export class DBStorage implements IStorage {
     return await query;
   }
 
+  // Get session participants with user information
+  async getSessionParticipantsWithUsers(
+    sessionId: number,
+    activeOnly: boolean = false
+  ): Promise<(SessionParticipant & { username: string; })[]> {
+    const filters = [eq(sessionParticipants.sessionId, sessionId)];
+
+    if (activeOnly) {
+      filters.push(eq(sessionParticipants.isActive, true));
+    }
+
+    // Join with users table to get usernames
+    const query = db
+      .select({
+        id: sessionParticipants.id,
+        sessionId: sessionParticipants.sessionId,
+        userId: sessionParticipants.userId,
+        cursor: sessionParticipants.cursor,
+        isActive: sessionParticipants.isActive,
+        joinedAt: sessionParticipants.joinedAt,
+        username: users.username,
+      })
+      .from(sessionParticipants)
+      .innerJoin(users, eq(sessionParticipants.userId, users.id))
+      .where(and(...filters));
+
+    return await query;
+  }
+
   async addParticipant(
     participant: InsertSessionParticipant
   ): Promise<SessionParticipant> {

@@ -134,7 +134,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               // Send active participants to all clients in the session
               broadcastToSession(message.sessionId, {
                 type: "participants_update",
-                participants: await storage.getSessionParticipants(
+                participants: await storage.getSessionParticipantsWithUsers(
                   message.sessionId,
                   true
                 ),
@@ -149,7 +149,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               // Notify other clients
               broadcastToSession(client.sessionId, {
                 type: "participants_update",
-                participants: await storage.getSessionParticipants(
+                participants: await storage.getSessionParticipantsWithUsers(
                   client.sessionId,
                   true
                 ),
@@ -162,7 +162,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           case "cursor_update":
             if (client.sessionId && client.userId > 0) {
               // Find the participant and update cursor
-              const participants = await storage.getSessionParticipants(
+              const participants = await storage.getSessionParticipantsWithUsers(
                 client.sessionId
               );
               const participant = participants.find(
@@ -255,7 +255,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Notify other clients
         broadcastToSession(client.sessionId, {
           type: "participants_update",
-          participants: await storage.getSessionParticipants(
+          participants: await storage.getSessionParticipantsWithUsers(
             client.sessionId,
             true
           ),
@@ -392,7 +392,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // User has access, retrieve session data
       const files = await storage.getFilesBySession(sessionId);
-      const participants = await storage.getSessionParticipants(sessionId, false);
+      const participants = await storage.getSessionParticipantsWithUsers(sessionId, false);
 
       return res.status(200).json({ session, files, participants });
     } catch (error) {
