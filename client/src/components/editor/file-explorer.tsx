@@ -76,7 +76,7 @@ function FileItem({
 
   return (
     <div
-      className={`file-item group flex items-center py-1 px-2 rounded cursor-pointer hover:bg-gray-800 text-gray-300 hover:text-white ${isActive ? "bg-gray-800 text-white" : ""
+      className={`file-item group flex items-center py-1 px-2 rounded cursor-pointer hover:bg-gray-800 text-gray-300 hover:text-foreground ${isActive ? "bg-gray-800 text-foreground" : ""
         }`}
       onClick={onSelect}
     >
@@ -87,7 +87,7 @@ function FileItem({
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                className="p-0.5 text-gray-400 hover:text-white rounded hover:bg-gray-700 text-xs"
+                className="p-0.5 text-gray-400 hover:text-foreground rounded hover:bg-gray-700 text-xs"
                 onClick={(e) => {
                   e.stopPropagation();
                   onRename(file.name);
@@ -106,7 +106,7 @@ function FileItem({
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                className="p-0.5 text-gray-400 hover:text-white rounded hover:bg-gray-700 text-xs"
+                className="p-0.5 text-gray-400 hover:text-foreground rounded hover:bg-gray-700 text-xs"
                 onClick={(e) => {
                   e.stopPropagation();
                   onDelete();
@@ -295,13 +295,13 @@ export function FileExplorer({
 
       {/* Create File Dialog */}
       <Dialog open={isCreatingFile} onOpenChange={setIsCreatingFile}>
-        <DialogContent className="bg-gray-800 text-white border border-gray-700">
+        <DialogContent className="bg-gray-800 text-foreground border border-gray-700">
           <DialogHeader>
             <DialogTitle>Create New File</DialogTitle>
           </DialogHeader>
           <div className="py-4">
             <Input
-              className="bg-gray-900 border-gray-700 text-white"
+              className="bg-gray-900 border-gray-700 text-foreground"
               placeholder="File name (e.g. main.js)"
               value={newFileName}
               onChange={(e) => setNewFileName(e.target.value)}
@@ -330,13 +330,13 @@ export function FileExplorer({
 
       {/* Rename File Dialog */}
       <Dialog open={isRenamingFile} onOpenChange={setIsRenamingFile}>
-        <DialogContent className="bg-gray-800 text-white border border-gray-700">
+        <DialogContent className="bg-gray-800 text-foreground border border-gray-700">
           <DialogHeader>
             <DialogTitle>Rename File</DialogTitle>
           </DialogHeader>
           <div className="py-4">
             <Input
-              className="bg-gray-900 border-gray-700 text-white"
+              className="bg-gray-900 border-gray-700 text-foreground"
               placeholder="New file name"
               value={newFileName}
               onChange={(e) => setNewFileName(e.target.value)}
@@ -366,7 +366,7 @@ export function FileExplorer({
 
       {/* Delete File Confirmation Dialog */}
       <Dialog open={isDeletingFile} onOpenChange={setIsDeletingFile}>
-        <DialogContent className="bg-gray-800 text-white border border-gray-700">
+        <DialogContent className="bg-gray-800 text-foreground border border-gray-700">
           <DialogHeader>
             <DialogTitle>Confirm Deletion</DialogTitle>
           </DialogHeader>

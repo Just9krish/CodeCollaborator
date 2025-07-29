@@ -179,26 +179,26 @@ export function CollaborationPanel({
         <TabsList className="flex border-b border-gray-700 bg-transparent">
           <TabsTrigger
             value="output"
-            className="flex-1 py-2 px-4 text-sm font-medium data-[state=active]:bg-gray-900 data-[state=active]:text-white data-[state=inactive]:text-gray-400 data-[state=inactive]:hover:text-white data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
+            className="flex-1 py-2 px-4 text-sm font-medium data-[state=active]:bg-gray-900 data-[state=active]:text-foreground data-[state=inactive]:text-gray-400 data-[state=inactive]:hover:text-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
           >
             Output
           </TabsTrigger>
           <TabsTrigger
             value="chat"
-            className="flex-1 py-2 px-4 text-sm font-medium data-[state=active]:bg-gray-900 data-[state=active]:text-white data-[state=inactive]:text-gray-400 data-[state=inactive]:hover:text-white data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
+            className="flex-1 py-2 px-4 text-sm font-medium data-[state=active]:bg-gray-900 data-[state=active]:text-foreground data-[state=inactive]:text-gray-400 data-[state=inactive]:hover:text-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
           >
             Chat
           </TabsTrigger>
           <TabsTrigger
             value="people"
-            className="flex-1 py-2 px-4 text-sm font-medium data-[state=active]:bg-gray-900 data-[state=active]:text-white data-[state=inactive]:text-gray-400 data-[state=inactive]:hover:text-white data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
+            className="flex-1 py-2 px-4 text-sm font-medium data-[state=active]:bg-gray-900 data-[state=active]:text-foreground data-[state=inactive]:text-gray-400 data-[state=inactive]:hover:text-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
           >
             People
           </TabsTrigger>
           {isSessionOwner && (
             <TabsTrigger
               value="requests"
-              className="flex-1 py-2 px-4 text-sm font-medium data-[state=active]:bg-gray-900 data-[state=active]:text-white data-[state=inactive]:text-gray-400 data-[state=inactive]:hover:text-white data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none relative"
+              className="flex-1 py-2 px-4 text-sm font-medium data-[state=active]:bg-gray-900 data-[state=active]:text-foreground data-[state=inactive]:text-gray-400 data-[state=inactive]:hover:text-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none relative"
             >
               Requests
               {collaborationRequests.length > 0 && (
@@ -229,7 +229,7 @@ export function CollaborationPanel({
               )}
 
               {!executionResult.error && executionResult.output && (
-                <div className="text-white mt-2 whitespace-pre-wrap">
+                <div className="text-foreground mt-2 whitespace-pre-wrap">
                   {executionResult.output}
                 </div>
               )}
@@ -268,8 +268,8 @@ export function CollaborationPanel({
 
                     <div
                       className={`max-w-[80%] px-3 py-2 rounded-lg ${isCurrentUser
-                        ? "bg-background text-white"
-                        : "bg-gray-700 text-white"
+                        ? "bg-background text-foreground"
+                        : "bg-gray-700 text-foreground"
                         }`}
                     >
                       {!isCurrentUser && (
@@ -301,7 +301,7 @@ export function CollaborationPanel({
           <div className="p-3 border-t border-gray-700 bg-gray-800">
             <div className="flex space-x-2">
               <Input
-                className="bg-gray-700 border-gray-600 text-white"
+                className="bg-gray-700 border-gray-600 text-foreground"
                 placeholder="Type a message..."
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
@@ -324,7 +324,7 @@ export function CollaborationPanel({
           className="flex-1 overflow-auto p-4 bg-gray-900"
         >
           <div className="mb-4">
-            <h3 className="text-sm font-medium text-white mb-2">
+            <h3 className="text-sm font-medium text-foreground mb-2">
               Active Collaborators
             </h3>
             <div className="space-y-2">
@@ -347,7 +347,7 @@ export function CollaborationPanel({
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <div className="text-sm font-medium text-white">
+                      <div className="text-sm font-medium text-foreground">
                         {participant.username}
                         {participant.userId === user?.id && " (You)"}
                       </div>
@@ -369,7 +369,7 @@ export function CollaborationPanel({
 
           {participants.some((p) => !p.isActive) && (
             <div>
-              <h3 className="text-sm font-medium text-white mb-2">Inactive</h3>
+              <h3 className="text-sm font-medium text-foreground mb-2">Inactive</h3>
               <div className="space-y-2">
                 {participants
                   .filter((p) => !p.isActive)
@@ -405,7 +405,7 @@ export function CollaborationPanel({
             value="requests"
             className="flex-1 overflow-auto p-4 bg-gray-900"
           >
-            <h3 className="text-sm font-medium text-white mb-4">
+            <h3 className="text-sm font-medium text-foreground mb-4">
               Collaboration Requests
             </h3>
 
@@ -425,7 +425,7 @@ export function CollaborationPanel({
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <div className="text-sm font-medium text-white">
+                        <div className="text-sm font-medium text-foreground">
                           {request.username || `User ${request.fromUserId}`}
                         </div>
                         <div className="text-xs text-gray-400">

@@ -26,7 +26,7 @@ export function ProtectedRoute({
     localStorage.setItem("redirectAfterLogin", path);
     return (
       <Route path={path}>
-        <Redirect to="/auth" />
+        <Redirect to="/login" />
       </Route>
     );
   }

@@ -196,14 +196,14 @@ export function NotificationBell() {
             {showDropdown && (
                 <div className="absolute right-0 top-full mt-2 w-80 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-50 max-h-96 overflow-hidden">
                     <div className="p-3 border-b border-gray-700 flex items-center justify-between">
-                        <h3 className="text-sm font-medium text-white">Notifications</h3>
+                        <h3 className="text-sm font-medium text-foreground">Notifications</h3>
                         {notifications.length > 0 && (
                             <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => markAllAsReadMutation.mutate()}
                                 disabled={markAllAsReadMutation.isPending}
-                                className="text-xs text-gray-400 hover:text-white"
+                                className="text-xs text-gray-400 hover:text-foreground"
                             >
                                 Mark all read
                             </Button>
@@ -223,7 +223,7 @@ export function NotificationBell() {
                                         <span className="text-lg">{getNotificationIcon(notification.type)}</span>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center justify-between">
-                                                <h4 className="text-sm font-medium text-white truncate">
+                                                <h4 className="text-sm font-medium text-foreground truncate">
                                                     {notification.title}
                                                 </h4>
                                                 <div className="flex items-center space-x-2">

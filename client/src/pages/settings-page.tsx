@@ -39,7 +39,7 @@ export default function SettingsPage() {
 
   return (
     <div className="container mx-auto py-10 px-4">
-      <h1 className="text-3xl font-bold mb-8 text-white">Settings</h1>
+      <h1 className="text-3xl font-bold mb-8 text-foreground">Settings</h1>
 
       <Tabs defaultValue="account" className="w-full">
         <TabsList className="grid w-full max-w-md grid-cols-2 mb-8">
@@ -48,7 +48,7 @@ export default function SettingsPage() {
         </TabsList>
 
         <TabsContent value="account">
-          <Card className="bg-gray-800 border-gray-700 text-white">
+          <Card className="bg-gray-800 border-gray-700 text-foreground">
             <CardHeader>
               <CardTitle>Account Information</CardTitle>
               <CardDescription className="text-gray-400">
@@ -115,7 +115,7 @@ export default function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="preferences">
-          <Card className="bg-gray-800 border-gray-700 text-white">
+          <Card className="bg-gray-800 border-gray-700 text-foreground">
             <CardHeader>
               <CardTitle>Preferences</CardTitle>
               <CardDescription className="text-gray-400">

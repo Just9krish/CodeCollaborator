@@ -48,8 +48,8 @@ export function LanguageSelector({
             <button
               key={language.id}
               className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-700 flex items-center ${language.id === currentLanguage
-                  ? "bg-gray-700 text-white"
-                  : "text-gray-300"
+                ? "bg-gray-700 text-foreground"
+                : "text-gray-300"
                 }`}
               onClick={() => {
                 onSelect(language.id);

@@ -88,12 +88,12 @@ export function SessionControls({
                 onBlur={handleNameChange}
                 onKeyDown={handleKeyDown}
                 autoFocus
-                className="bg-transparent border border-gray-600 hover:border-gray-500 rounded px-2 py-1 text-sm font-medium focus:outline-none text-white h-auto w-auto"
+                className="bg-transparent border border-gray-600 hover:border-gray-500 rounded px-2 py-1 text-sm font-medium focus:outline-none text-foreground h-auto w-auto"
               />
             ) : (
               <button
                 onClick={() => setIsEditing(true)}
-                className="bg-transparent border border-transparent hover:border-gray-600 rounded px-2 py-1 text-sm font-medium text-white"
+                className="bg-transparent border border-transparent hover:border-gray-600 rounded px-2 py-1 text-sm font-medium text-foreground"
               >
                 {name || "Untitled Project"}
               </button>

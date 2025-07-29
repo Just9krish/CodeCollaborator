@@ -18,6 +18,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { NotificationBell } from "@/components/ui/notification-bell";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export function AppHeader() {
   const { user, logoutMutation } = useAuth();
@@ -37,12 +38,12 @@ export function AppHeader() {
   };
 
   return (
-    <header className="bg-dark border-b border-gray-700 py-2 px-4">
+    <header className="bg-background border-b border-border py-2 px-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center">
           <Link to="/" className="flex items-center mr-8">
             <i className="ri-code-box-line text-primary text-2xl mr-2"></i>
-            <h1 className="text-xl font-semibold text-white">CodeCollab</h1>
+            <h1 className="text-xl font-semibold text-foreground">CodeCollab</h1>
           </Link>
 
           {/* Desktop Navigation */}
@@ -52,7 +53,7 @@ export function AppHeader() {
                 variant="ghost"
                 className={`text-sm px-2 py-1 ${isActivePath("/")
                   ? "bg-primary/10 text-primary"
-                  : "text-gray-300 hover:text-white"
+                  : "text-gray-300 hover:text-foreground"
                   }`}
               >
                 Dashboard
@@ -63,7 +64,7 @@ export function AppHeader() {
                 variant="ghost"
                 className={`text-sm px-2 py-1 ${location.startsWith("/playground")
                   ? "bg-primary/10 text-primary"
-                  : "text-gray-300 hover:text-white"
+                  : "text-gray-300 hover:text-foreground"
                   }`}
               >
                 Playground
@@ -74,10 +75,12 @@ export function AppHeader() {
 
         {/* User controls */}
         <div className="flex items-center space-x-4">
+          <ThemeToggle />
+
           <Button
             variant="ghost"
             size="icon"
-            className="p-1.5 text-gray-400 hover:text-white rounded-full hover:bg-gray-700"
+            className="p-1.5 text-muted-foreground hover:text-foreground rounded-full hover:bg-accent"
           >
             <i className="ri-question-line text-lg"></i>
           </Button>
@@ -96,27 +99,26 @@ export function AppHeader() {
                       {getInitials(user.username)}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="text-sm font-medium hidden md:inline-block text-white">
+                  <span className="text-sm font-medium hidden md:inline-block text-foreground">
                     {user.username}
                   </span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56 bg-gray-800 border-gray-700 text-white">
+              <DropdownMenuContent className="w-56">
                 <Link to="/profile">
-                  <DropdownMenuItem className="text-gray-300 hover:text-white focus:bg-gray-700">
+                  <DropdownMenuItem>
                     <i className="ri-user-line mr-2"></i>
                     <span>Profile</span>
                   </DropdownMenuItem>
                 </Link>
                 <Link to="/settings">
-                  <DropdownMenuItem className="text-gray-300 hover:text-white focus:bg-gray-700">
+                  <DropdownMenuItem>
                     <i className="ri-settings-4-line mr-2"></i>
                     <span>Settings</span>
                   </DropdownMenuItem>
                 </Link>
-                <DropdownMenuSeparator className="bg-gray-700" />
+                <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  className="text-gray-300 hover:text-white focus:bg-gray-700"
                   onClick={handleLogout}
                 >
                   <i className="ri-logout-box-r-line mr-2"></i>
@@ -130,7 +132,7 @@ export function AppHeader() {
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden p-1.5 text-gray-400 hover:text-white rounded-full hover:bg-gray-700"
+            className="md:hidden p-1.5 text-muted-foreground hover:text-foreground rounded-full hover:bg-accent"
             onClick={() => setShowMobileMenu(true)}
           >
             <i className="ri-menu-line text-lg"></i>
@@ -140,7 +142,7 @@ export function AppHeader() {
 
       {/* Mobile Navigation Menu */}
       <Dialog open={showMobileMenu} onOpenChange={setShowMobileMenu}>
-        <DialogContent className="bg-gray-800 text-white border border-gray-700 sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle className="flex items-center">
               <i className="ri-code-box-line text-primary text-xl mr-2"></i>

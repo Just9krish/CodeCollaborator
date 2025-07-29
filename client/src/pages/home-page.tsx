@@ -201,7 +201,7 @@ export default function HomePage() {
       <main className="flex-1 p-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold text-white">Your Projects</h1>
+            <h1 className="text-2xl font-bold text-foreground">Your Projects</h1>
             {/* <Button onClick={openCreateDialog}>
               <i className="ri-add-line mr-1"></i>
               New Project
@@ -216,7 +216,7 @@ export default function HomePage() {
             <Card className="bg-gray-800 border-gray-700 col-span-full mt-20">
               <CardContent className="p-8 text-center">
                 <i className="ri-inbox-line text-4xl text-gray-500 mb-4"></i>
-                <h3 className="text-xl font-medium text-white">
+                <h3 className="text-xl font-medium text-foreground">
                   No projects yet
                 </h3>
                 <p className="mt-2 text-gray-400">
@@ -244,7 +244,7 @@ export default function HomePage() {
                         <i className="ri-add-line text-2xl text-primary"></i>
                       </div>
                     </div>
-                    <h3 className="mt-4 text-xl font-medium text-white">
+                    <h3 className="mt-4 text-xl font-medium text-foreground">
                       Create New Project
                     </h3>
                     <p className="mt-2 text-sm text-gray-400">
@@ -260,7 +260,7 @@ export default function HomePage() {
                   <Link to={`/playground/${session.id}`} key={session.id}>
                     <Card className="bg-gray-800 border-gray-700 hover:border-primary transition-colors cursor-pointer">
                       <CardHeader className="pb-2">
-                        <CardTitle className="text-white">
+                        <CardTitle className="text-foreground">
                           {session.name || "Untitled Project"}
                         </CardTitle>
                         <CardDescription className="flex items-center text-gray-400">
@@ -316,9 +316,9 @@ export default function HomePage() {
 
       {/* Create Project Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-gray-800 text-white border-gray-700">
+        <DialogContent className="sm:max-w-[425px] bg-gray-800 text-foreground border-gray-700">
           <DialogHeader>
-            <DialogTitle className="text-white">Create New Project</DialogTitle>
+            <DialogTitle className="text-foreground">Create New Project</DialogTitle>
             <DialogDescription className="text-gray-400">
               Set up a new coding project with your preferred settings.
             </DialogDescription>
@@ -330,7 +330,7 @@ export default function HomePage() {
               <Input
                 id="project-name"
                 placeholder="My Awesome Project"
-                className="bg-gray-700 border-gray-600 text-white"
+                className="bg-gray-700 border-gray-600 text-foreground"
                 value={newProjectName}
                 onChange={(e) => setNewProjectName(e.target.value)}
                 autoFocus
@@ -343,15 +343,15 @@ export default function HomePage() {
                 value={projectLanguage}
                 onValueChange={(value) => setProjectLanguage(value)}
               >
-                <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                <SelectTrigger className="bg-gray-700 border-gray-600 text-foreground">
                   <SelectValue placeholder="Select a language" />
                 </SelectTrigger>
-                <SelectContent className="bg-gray-700 border-gray-600 text-white">
+                <SelectContent className="bg-gray-700 border-gray-600 text-foreground">
                   {languages.map((lang) => (
                     <SelectItem
                       key={lang.id}
                       value={lang.id}
-                      className="text-white hover:bg-gray-600"
+                      className="text-foreground hover:bg-gray-600"
                     >
                       <div className="flex items-center">
                         <i
@@ -420,7 +420,7 @@ export default function HomePage() {
             <Button
               variant="outline"
               onClick={() => setIsCreateDialogOpen(false)}
-              className="bg-transparent hover:bg-gray-700 text-white border-gray-600"
+              className="bg-transparent hover:bg-gray-700 text-foreground border-gray-600"
             >
               Cancel
             </Button>
@@ -440,9 +440,9 @@ export default function HomePage() {
 
       {/* Share URL Dialog */}
       <Dialog open={isShareDialogOpen} onOpenChange={setIsShareDialogOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-gray-800 text-white border-gray-700">
+        <DialogContent className="sm:max-w-[425px] bg-gray-800 text-foreground border-gray-700">
           <DialogHeader>
-            <DialogTitle className="text-white">Project Created!</DialogTitle>
+            <DialogTitle className="text-foreground">Project Created!</DialogTitle>
             <DialogDescription className="text-gray-400">
               Your public project has been created successfully. Share this link
               with others to collaborate.
@@ -455,12 +455,12 @@ export default function HomePage() {
                 ref={urlInputRef}
                 readOnly
                 value={sharingUrl}
-                className="bg-gray-700 border-gray-600 text-white flex-1"
+                className="bg-gray-700 border-gray-600 text-foreground flex-1"
               />
               <Button
                 onClick={copyToClipboard}
                 variant="outline"
-                className="bg-transparent hover:bg-gray-700 text-white border-gray-600"
+                className="bg-transparent hover:bg-gray-700 text-foreground border-gray-600"
               >
                 <Copy className="h-4 w-4" />
               </Button>
@@ -494,7 +494,7 @@ export default function HomePage() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="bg-gray-800 text-white">
+        <DialogContent className="bg-gray-800 text-foreground">
           <DialogHeader>
             <DialogTitle>Delete Project</DialogTitle>
             <DialogDescription>

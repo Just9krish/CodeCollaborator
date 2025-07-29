@@ -485,7 +485,7 @@ export default function PlaygroundPage() {
         <div className="text-amber-500 text-6xl mb-4">
           <i className="ri-lock-line"></i>
         </div>
-        <h1 className="text-2xl font-bold text-white mb-2">
+        <h1 className="text-2xl font-bold text-foreground mb-2">
           Authentication Required
         </h1>
         <p className="text-gray-400 mb-6">
@@ -500,7 +500,7 @@ export default function PlaygroundPage() {
                 "redirectAfterLogin",
                 window.location.pathname
               );
-              window.location.href = "/auth";
+              window.location.href = "/login";
             }}
           >
             Log In
@@ -523,7 +523,7 @@ export default function PlaygroundPage() {
         <div className="text-amber-500 text-6xl mb-4">
           <i className="ri-team-line"></i>
         </div>
-        <h1 className="text-2xl font-bold text-white mb-2">Private Project</h1>
+        <h1 className="text-2xl font-bold text-foreground mb-2">Private Project</h1>
         <p className="text-gray-400 mb-6 text-center max-w-md">
           This is a private project. You need to request access from the owner.
           Once your request is approved, you'll be able to collaborate on this
@@ -552,7 +552,7 @@ export default function PlaygroundPage() {
         <div className="text-red-500 text-6xl mb-4">
           <i className="ri-error-warning-line"></i>
         </div>
-        <h1 className="text-2xl font-bold text-white mb-2">
+        <h1 className="text-2xl font-bold text-foreground mb-2">
           Failed to load playground
         </h1>
         <p className="text-gray-400 mb-6">
@@ -598,7 +598,7 @@ export default function PlaygroundPage() {
             </h3>
             <div className="flex space-x-1">
               <button
-                className="p-1 text-gray-400 hover:text-white rounded hover:bg-gray-700 text-xs"
+                className="p-1 text-gray-400 hover:text-foreground rounded hover:bg-gray-700 text-xs"
                 onClick={() => {
                   // Open the create file dialog in FileExplorer component
                   document.getElementById("create-file-button")?.click();
@@ -607,7 +607,7 @@ export default function PlaygroundPage() {
                 <i className="ri-add-line"></i>
               </button>
               <button
-                className="p-1 text-gray-400 hover:text-white rounded hover:bg-gray-700 text-xs"
+                className="p-1 text-gray-400 hover:text-foreground rounded hover:bg-gray-700 text-xs"
                 onClick={() => {
                   document.getElementById('upload-file-input')?.click();
                 }}
@@ -635,8 +635,8 @@ export default function PlaygroundPage() {
               <div
                 key={file.id}
                 className={`px-3 py-2 flex items-center border-r border-gray-700 cursor-pointer ${file.id === activeFileId
-                  ? "bg-gray-900 text-white"
-                  : "text-gray-400 hover:text-white"
+                  ? "bg-gray-900 text-foreground"
+                  : "text-gray-400 hover:text-foreground"
                   }`}
                 onClick={() => handleSelectFileTab(file.id)}
               >
@@ -646,7 +646,7 @@ export default function PlaygroundPage() {
                 ></i>
                 <span className="text-sm font-mono">{file.name}</span>
                 <button
-                  className="ml-2 text-gray-500 hover:text-white"
+                  className="ml-2 text-gray-500 hover:text-foreground"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleCloseFileTab(file.id);
@@ -691,7 +691,7 @@ export default function PlaygroundPage() {
         <Button
           variant="default"
           size="icon"
-          className="p-3 bg-gray-800 text-white rounded-full shadow-lg hover:bg-gray-700"
+          className="p-3 bg-gray-800 text-foreground rounded-full shadow-lg hover:bg-gray-700"
           onClick={() => setShowSidebar(!showSidebar)}
         >
           <i className="ri-folder-line"></i>
@@ -699,7 +699,7 @@ export default function PlaygroundPage() {
         <Button
           variant="default"
           size="icon"
-          className="p-3 bg-primary text-white rounded-full shadow-lg hover:bg-primary/90"
+          className="p-3 bg-primary text-foreground rounded-full shadow-lg hover:bg-primary/90"
           onClick={runCode}
           disabled={isRunning}
         >
@@ -712,7 +712,7 @@ export default function PlaygroundPage() {
         <Button
           variant="default"
           size="icon"
-          className="p-3 bg-gray-800 text-white rounded-full shadow-lg hover:bg-gray-700"
+          className="p-3 bg-gray-800 text-foreground rounded-full shadow-lg hover:bg-gray-700"
           onClick={() => setShowCollaborationPanel(!showCollaborationPanel)}
         >
           <i className="ri-terminal-box-line"></i>

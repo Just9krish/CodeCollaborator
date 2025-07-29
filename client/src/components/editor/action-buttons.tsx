@@ -137,7 +137,7 @@ export function ActionButtons({
             <Button
               variant="ghost"
               size="sm"
-              className="flex items-center space-x-1 text-sm text-gray-300 hover:text-white px-2 py-1 rounded"
+              className="flex items-center space-x-1 text-sm text-gray-300 hover:text-foreground px-2 py-1 rounded"
               onClick={saveCode}
             >
               <FaSave />
@@ -156,7 +156,7 @@ export function ActionButtons({
             <Button
               variant="ghost"
               size="sm"
-              className="flex items-center space-x-1 text-sm text-gray-300 hover:text-white px-2 py-1 rounded"
+              className="flex items-center space-x-1 text-sm text-gray-300 hover:text-foreground px-2 py-1 rounded"
               onClick={forkProject}
             >
               <FaCodeBranch />
@@ -171,7 +171,7 @@ export function ActionButtons({
 
       <Button
         size="sm"
-        className="flex items-center space-x-1 text-sm bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded"
+        className="flex items-center space-x-1 text-sm bg-green-500 hover:bg-green-600 text-foreground px-2 py-1 rounded"
         onClick={runCode}
         disabled={isRunning}
       >
@@ -182,7 +182,7 @@ export function ActionButtons({
       <Button
         variant="secondary"
         size="sm"
-        className="flex items-center space-x-1 text-sm text-white px-2 py-1 rounded"
+        className="flex items-center space-x-1 text-sm text-foreground px-2 py-1 rounded"
         onClick={shareProject}
       >
         <FaShareNodes />
@@ -190,7 +190,7 @@ export function ActionButtons({
       </Button>
 
       <Dialog open={isSharing} onOpenChange={setIsSharing}>
-        <DialogContent className="bg-gray-800 text-white border border-gray-700">
+        <DialogContent className="bg-gray-800 text-foreground border border-gray-700">
           <DialogHeader>
             <DialogTitle>Share Project</DialogTitle>
             <DialogDescription className="text-gray-400">
@@ -201,7 +201,7 @@ export function ActionButtons({
             <Input
               value={shareableLink}
               readOnly
-              className="bg-gray-900 border-gray-700 text-white"
+              className="bg-gray-900 border-gray-700 text-foreground"
             />
             <Button onClick={copyLink}>
               <FaClipboard />
