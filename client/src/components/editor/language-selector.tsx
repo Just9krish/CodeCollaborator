@@ -34,7 +34,7 @@ export function LanguageSelector({
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          className="flex items-center space-x-2 text-sm border border-gray-700 rounded px-2 py-1 bg-transparent hover:bg-gray-700"
+          className="flex items-center space-x-2 text-sm rounded px-2 py-1 bg-transparent"
         >
           <span className={`${selectedLanguage.iconColor} font-mono text-xs`}>
             {selectedLanguage.name}
@@ -42,16 +42,15 @@ export function LanguageSelector({
           <i className="ri-arrow-down-s-line text-gray-400"></i>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-48 p-0 bg-gray-800 border border-gray-700">
+      <PopoverContent className="w-48 p-0">
         <div className="py-1">
           {languageOptions.map(language => (
             <button
               key={language.id}
-              className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-700 flex items-center ${
-                language.id === currentLanguage
-                  ? "bg-gray-700 text-foreground"
-                  : "text-gray-300"
-              }`}
+              className={`w-full text-left px-3 py-2 text-sm hover:bg-accent flex items-center ${language.id === currentLanguage
+                  ? "bg-accent text-foreground"
+                  : "text-muted-foreground"
+                }`}
               onClick={() => {
                 onSelect(language.id);
                 setOpen(false);
