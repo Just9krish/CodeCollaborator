@@ -9,7 +9,7 @@ import { User as SelectUser } from "@shared/schema";
 
 declare global {
   namespace Express {
-    interface User extends SelectUser { }
+    interface User extends SelectUser {}
   }
 }
 
@@ -81,7 +81,7 @@ export function setupAuth(app: Express) {
         password: await hashPassword(req.body.password),
       });
 
-      req.login(user, (err) => {
+      req.login(user, err => {
         if (err) return next(err);
         // Don't send password back to client
         const { password, ...userWithoutPassword } = user;
@@ -99,7 +99,7 @@ export function setupAuth(app: Express) {
       if (!user)
         return res.status(401).json({ message: "Invalid credentials" });
 
-      req.login(user, (err) => {
+      req.login(user, err => {
         if (err) return next(err);
         // Don't send password back to client
         const { password, ...userWithoutPassword } = user;
@@ -109,7 +109,7 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/logout", (req, res, next) => {
-    req.logout((err) => {
+    req.logout(err => {
       if (err) return next(err);
       res.sendStatus(200);
     });

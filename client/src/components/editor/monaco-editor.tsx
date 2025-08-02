@@ -118,7 +118,7 @@ export function MonacoEditor({
         });
 
         // Handle cursor position changes
-        editor.onDidChangeCursorPosition((e) => {
+        editor.onDidChangeCursorPosition(e => {
           if (!readOnly) {
             const cursor: CursorPosition = {
               line: e.position.lineNumber,
@@ -179,8 +179,8 @@ export function MonacoEditor({
 
     // Add cursor decorations for each participant
     const decorations = participants
-      .filter((participant) => participant.cursor?.fileId === fileId)
-      .map((participant) => {
+      .filter(participant => participant.cursor?.fileId === fileId)
+      .map(participant => {
         const { cursor, username, color } = participant;
         if (!cursor) return null;
 
@@ -206,8 +206,9 @@ export function MonacoEditor({
             glyphMarginClassName: "flex items-center justify-center",
             glyphMarginHoverMessage: { value: username },
             isWholeLine: false,
-            inlineClassName: `relative border-l-2 border-${color || generateUserColor(username)
-              }`,
+            inlineClassName: `relative border-l-2 border-${
+              color || generateUserColor(username)
+            }`,
           },
         };
       })
@@ -234,10 +235,10 @@ export function MonacoEditor({
       {/* Visual cursor indicators for participants */}
       {participants
         .filter(
-          (participant) =>
+          participant =>
             participant.cursor?.fileId === fileId && editorRef.current
         )
-        .map((participant) => (
+        .map(participant => (
           <div
             key={participant.id}
             className="absolute pointer-events-none z-20"

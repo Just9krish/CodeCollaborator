@@ -43,7 +43,9 @@ export function AppHeader() {
         <div className="flex items-center">
           <Link to="/" className="flex items-center mr-8">
             <i className="ri-code-box-line text-primary text-2xl mr-2"></i>
-            <h1 className="text-xl font-semibold text-foreground">CodeCollab</h1>
+            <h1 className="text-xl font-semibold text-foreground">
+              CodeCollab
+            </h1>
           </Link>
 
           {/* Desktop Navigation */}
@@ -118,9 +120,7 @@ export function AppHeader() {
                   </DropdownMenuItem>
                 </Link>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={handleLogout}
-                >
+                <DropdownMenuItem onClick={handleLogout}>
                   <i className="ri-logout-box-r-line mr-2"></i>
                   <span>Logout</span>
                 </DropdownMenuItem>

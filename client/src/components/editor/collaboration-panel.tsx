@@ -52,7 +52,7 @@ export function CollaborationPanel({
 
   // Fetch collaboration requests (only if current user is the session owner)
   const { data: sessionData } = useQuery<{
-    session: { id: number; ownerId: number; };
+    session: { id: number; ownerId: number };
   }>({
     queryKey: ["/api/sessions", sessionId],
     enabled: !!user && !!sessionId,
@@ -126,10 +126,10 @@ export function CollaborationPanel({
 
   // Subscribe to chat messages from websocket
   useEffect(() => {
-    const unsubscribe = wsManager.on("chat_message", (data) => {
-      const sender = participants.find((p) => p.userId === data.message.userId);
+    const unsubscribe = wsManager.on("chat_message", data => {
+      const sender = participants.find(p => p.userId === data.message.userId);
       if (sender) {
-        setMessages((prev) => [
+        setMessages(prev => [
           ...prev,
           {
             ...data.message,
@@ -163,46 +163,46 @@ export function CollaborationPanel({
   const getInitials = (name: string) => {
     return name
       .split(" ")
-      .map((part) => part[0])
+      .map(part => part[0])
       .join("")
       .toUpperCase()
       .slice(0, 2);
   };
 
   return (
-    <div className="w-80 bg-gray-800 border-l border-gray-700 flex-shrink-0 flex flex-col overflow-hidden">
+    <div className="w-80 bg-card border-l border-border flex-shrink-0 flex flex-col overflow-hidden">
       <Tabs
         value={activeTab}
         onValueChange={setActiveTab}
         className="flex-1 flex flex-col"
       >
-        <TabsList className="flex border-b border-gray-700 bg-transparent">
+        <TabsList className="flex border-b border-border bg-transparent">
           <TabsTrigger
             value="output"
-            className="flex-1 py-2 px-4 text-sm font-medium data-[state=active]:bg-gray-900 data-[state=active]:text-foreground data-[state=inactive]:text-gray-400 data-[state=inactive]:hover:text-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
+            className="flex-1 py-2 px-4 text-sm font-medium data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
           >
             Output
           </TabsTrigger>
           <TabsTrigger
             value="chat"
-            className="flex-1 py-2 px-4 text-sm font-medium data-[state=active]:bg-gray-900 data-[state=active]:text-foreground data-[state=inactive]:text-gray-400 data-[state=inactive]:hover:text-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
+            className="flex-1 py-2 px-4 text-sm font-medium data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
           >
             Chat
           </TabsTrigger>
           <TabsTrigger
             value="people"
-            className="flex-1 py-2 px-4 text-sm font-medium data-[state=active]:bg-gray-900 data-[state=active]:text-foreground data-[state=inactive]:text-gray-400 data-[state=inactive]:hover:text-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
+            className="flex-1 py-2 px-4 text-sm font-medium data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
           >
             People
           </TabsTrigger>
           {isSessionOwner && (
             <TabsTrigger
               value="requests"
-              className="flex-1 py-2 px-4 text-sm font-medium data-[state=active]:bg-gray-900 data-[state=active]:text-foreground data-[state=inactive]:text-gray-400 data-[state=inactive]:hover:text-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none relative"
+              className="flex-1 py-2 px-4 text-sm font-medium data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:text-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none relative"
             >
               Requests
               {collaborationRequests.length > 0 && (
-                <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary-foreground text-primary text-[10px]">
+                <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px]">
                   {collaborationRequests.length}
                 </span>
               )}
@@ -212,18 +212,21 @@ export function CollaborationPanel({
 
         <TabsContent
           value="output"
-          className="flex-1 overflow-auto p-4 font-mono text-sm bg-gray-900"
+          className="flex-1 overflow-auto p-4 font-mono text-sm bg-background"
         >
           {executionResult ? (
             <>
               {executionResult.logs.map((log, index) => (
-                <div key={index} className="text-gray-300 whitespace-pre-wrap">
+                <div
+                  key={index}
+                  className="text-muted-foreground whitespace-pre-wrap"
+                >
                   {log}
                 </div>
               ))}
 
               {executionResult.error && (
-                <div className="text-red-400 mt-2 whitespace-pre-wrap">
+                <div className="text-destructive mt-2 whitespace-pre-wrap">
                   {executionResult.error}
                 </div>
               )}
@@ -237,7 +240,7 @@ export function CollaborationPanel({
               <div ref={outputEndRef} />
             </>
           ) : (
-            <div className="text-gray-400 italic">
+            <div className="text-muted-foreground italic">
               Run your code to see output here
             </div>
           )}
@@ -245,7 +248,7 @@ export function CollaborationPanel({
 
         <TabsContent
           value="chat"
-          className="flex-1 flex flex-col overflow-hidden bg-gray-900"
+          className="flex-1 flex flex-col overflow-hidden bg-background"
         >
           <div className="flex-1 overflow-auto p-4">
             {messages.length > 0 ? (
@@ -255,8 +258,9 @@ export function CollaborationPanel({
                 return (
                   <div
                     key={index}
-                    className={`mb-3 flex ${isCurrentUser ? "justify-end" : "justify-start"
-                      }`}
+                    className={`mb-3 flex ${
+                      isCurrentUser ? "justify-end" : "justify-start"
+                    }`}
                   >
                     {!isCurrentUser && (
                       <Avatar className="h-8 w-8 mr-2">
@@ -267,13 +271,14 @@ export function CollaborationPanel({
                     )}
 
                     <div
-                      className={`max-w-[80%] px-3 py-2 rounded-lg ${isCurrentUser
-                        ? "bg-background text-foreground"
-                        : "bg-gray-700 text-foreground"
-                        }`}
+                      className={`max-w-[80%] px-3 py-2 rounded-lg ${
+                        isCurrentUser
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-foreground"
+                      }`}
                     >
                       {!isCurrentUser && (
-                        <div className="text-xs text-gray-300 mb-1">
+                        <div className="text-xs text-muted-foreground mb-1">
                           {message.username}
                         </div>
                       )}
@@ -291,20 +296,20 @@ export function CollaborationPanel({
                 );
               })
             ) : (
-              <div className="text-center text-gray-400 mt-4">
+              <div className="text-center text-muted-foreground mt-4">
                 No messages yet. Start the conversation!
               </div>
             )}
             <div ref={messagesEndRef} />
           </div>
 
-          <div className="p-3 border-t border-gray-700 bg-gray-800">
+          <div className="p-3 border-t border-border bg-muted">
             <div className="flex space-x-2">
               <Input
-                className="bg-gray-700 border-gray-600 text-foreground"
+                className="bg-background border-border text-foreground"
                 placeholder="Type a message..."
                 value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
+                onChange={e => setNewMessage(e.target.value)}
                 onKeyDown={handleKeyDown}
               />
               <Button
@@ -321,7 +326,7 @@ export function CollaborationPanel({
 
         <TabsContent
           value="people"
-          className="flex-1 overflow-auto p-4 bg-gray-900"
+          className="flex-1 overflow-auto p-4 bg-background"
         >
           <div className="mb-4">
             <h3 className="text-sm font-medium text-foreground mb-2">
@@ -329,8 +334,8 @@ export function CollaborationPanel({
             </h3>
             <div className="space-y-2">
               {participants
-                .filter((p) => p.isActive)
-                .map((participant) => (
+                .filter(p => p.isActive)
+                .map(participant => (
                   <div
                     onClick={() => console.log(participant)}
                     key={participant.userId}
@@ -338,10 +343,11 @@ export function CollaborationPanel({
                   >
                     <Avatar className="h-8 w-8 mr-3">
                       <AvatarFallback
-                        className={`${participant.userId === user?.id
-                          ? "bg-primary"
-                          : "bg-secondary"
-                          }`}
+                        className={`${
+                          participant.userId === user?.id
+                            ? "bg-primary"
+                            : "bg-secondary"
+                        }`}
                       >
                         {getInitials(participant.username)}
                       </AvatarFallback>
@@ -359,36 +365,38 @@ export function CollaborationPanel({
                   </div>
                 ))}
 
-              {participants.filter((p) => p.isActive).length === 0 && (
-                <div className="text-gray-400 text-sm italic">
+              {participants.filter(p => p.isActive).length === 0 && (
+                <div className="text-muted-foreground text-sm italic">
                   No active collaborators
                 </div>
               )}
             </div>
           </div>
 
-          {participants.some((p) => !p.isActive) && (
+          {participants.some(p => !p.isActive) && (
             <div>
-              <h3 className="text-sm font-medium text-foreground mb-2">Inactive</h3>
+              <h3 className="text-sm font-medium text-foreground mb-2">
+                Inactive
+              </h3>
               <div className="space-y-2">
                 {participants
-                  .filter((p) => !p.isActive)
-                  .map((participant) => (
+                  .filter(p => !p.isActive)
+                  .map(participant => (
                     <div
                       key={participant.userId}
                       className="flex items-center py-2"
                     >
                       <Avatar className="h-8 w-8 mr-3">
-                        <AvatarFallback className="bg-gray-600">
+                        <AvatarFallback className="bg-muted">
                           {getInitials(participant.username)}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <div className="text-sm font-medium text-gray-300">
+                        <div className="text-sm font-medium text-muted-foreground">
                           {participant.username}
                         </div>
-                        <div className="text-xs text-gray-400 flex items-center">
-                          <span className="h-1.5 w-1.5 rounded-full bg-gray-500 mr-1"></span>
+                        <div className="text-xs text-muted-foreground flex items-center">
+                          <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground mr-1"></span>
                           Offline
                         </div>
                       </div>
@@ -403,7 +411,7 @@ export function CollaborationPanel({
         {isSessionOwner && (
           <TabsContent
             value="requests"
-            className="flex-1 overflow-auto p-4 bg-gray-900"
+            className="flex-1 overflow-auto p-4 bg-background"
           >
             <h3 className="text-sm font-medium text-foreground mb-4">
               Collaboration Requests
@@ -411,10 +419,10 @@ export function CollaborationPanel({
 
             {collaborationRequests.length > 0 ? (
               <div className="space-y-4">
-                {collaborationRequests.map((request) => (
+                {collaborationRequests.map(request => (
                   <div
                     key={request.id}
-                    className="bg-gray-800 rounded-lg p-3 border border-gray-700"
+                    className="bg-muted rounded-lg p-3 border border-border"
                   >
                     <div className="flex items-center mb-2">
                       <Avatar className="h-8 w-8 mr-2">
@@ -428,7 +436,7 @@ export function CollaborationPanel({
                         <div className="text-sm font-medium text-foreground">
                           {request.username || `User ${request.fromUserId}`}
                         </div>
-                        <div className="text-xs text-gray-400">
+                        <div className="text-xs text-muted-foreground">
                           {new Date(request.createdAt).toLocaleDateString()}
                         </div>
                       </div>
@@ -463,7 +471,7 @@ export function CollaborationPanel({
                 ))}
               </div>
             ) : (
-              <div className="text-center text-gray-400 p-8">
+              <div className="text-center text-muted-foreground p-8">
                 <i className="ri-user-add-line text-4xl mb-2"></i>
                 <p>No collaboration requests yet</p>
                 <p className="text-xs mt-1">

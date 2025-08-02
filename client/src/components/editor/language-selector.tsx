@@ -26,7 +26,7 @@ export function LanguageSelector({
   });
 
   const selectedLanguage =
-    languageOptions.find((lang) => lang.id === currentLanguage) ||
+    languageOptions.find(lang => lang.id === currentLanguage) ||
     languageOptions[0];
 
   return (
@@ -44,13 +44,14 @@ export function LanguageSelector({
       </PopoverTrigger>
       <PopoverContent className="w-48 p-0 bg-gray-800 border border-gray-700">
         <div className="py-1">
-          {languageOptions.map((language) => (
+          {languageOptions.map(language => (
             <button
               key={language.id}
-              className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-700 flex items-center ${language.id === currentLanguage
-                ? "bg-gray-700 text-foreground"
-                : "text-gray-300"
-                }`}
+              className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-700 flex items-center ${
+                language.id === currentLanguage
+                  ? "bg-gray-700 text-foreground"
+                  : "text-gray-300"
+              }`}
               onClick={() => {
                 onSelect(language.id);
                 setOpen(false);

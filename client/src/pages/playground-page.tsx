@@ -190,7 +190,7 @@ export default function PlaygroundPage() {
       // Only update if change came from someone else
       if (data.userId !== user?.id && data.fileId === activeFileId) {
         // Find the file and update it
-        const fileIndex = openFiles.findIndex((f) => f.id === data.fileId);
+        const fileIndex = openFiles.findIndex(f => f.id === data.fileId);
         if (fileIndex >= 0) {
           const updatedFiles = [...openFiles];
           updatedFiles[fileIndex] = {
@@ -204,7 +204,7 @@ export default function PlaygroundPage() {
 
     const onCursorUpdate = (data: any) => {
       if (data.userId !== user?.id) {
-        setCursorPositions((prev) => {
+        setCursorPositions(prev => {
           const newMap = new Map(prev);
           newMap.set(data.userId, data.cursor);
           return newMap;
@@ -243,11 +243,11 @@ export default function PlaygroundPage() {
 
     const onFileDeleted = (data: any) => {
       // Remove deleted file from open files
-      setOpenFiles((prev) => prev.filter((f) => f.id !== data.fileId));
+      setOpenFiles(prev => prev.filter(f => f.id !== data.fileId));
 
       // If the deleted file was the active file, select another file
       if (activeFileId === data.fileId && openFiles.length > 1) {
-        const newActiveFile = openFiles.find((f) => f.id !== data.fileId);
+        const newActiveFile = openFiles.find(f => f.id !== data.fileId);
         if (newActiveFile) {
           setActiveFileId(newActiveFile.id);
         }
@@ -292,8 +292,9 @@ export default function PlaygroundPage() {
       // Handle the incoming request update event
       toast({
         title: "Collaboration Request Updated",
-        description: `User ${data.userId} has ${data.status === "approved" ? "joined" : "been rejected"
-          } the session.`,
+        description: `User ${data.userId} has ${
+          data.status === "approved" ? "joined" : "been rejected"
+        } the session.`,
       });
 
       // Refresh session data to reflect the latest participants
@@ -317,10 +318,10 @@ export default function PlaygroundPage() {
     setActiveFileId(fileId);
 
     // Add to open files if not already open
-    if (!openFiles.some((f) => f.id === fileId) && sessionData) {
-      const file = sessionData.files.find((f) => f.id === fileId);
+    if (!openFiles.some(f => f.id === fileId) && sessionData) {
+      const file = sessionData.files.find(f => f.id === fileId);
       if (file) {
-        setOpenFiles((prev) => [...prev, file]);
+        setOpenFiles(prev => [...prev, file]);
       }
     }
   };
@@ -333,11 +334,11 @@ export default function PlaygroundPage() {
   // Handle file tab close
   const handleCloseFileTab = (fileId: number) => {
     // Remove from open files
-    setOpenFiles((prev) => prev.filter((f) => f.id !== fileId));
+    setOpenFiles(prev => prev.filter(f => f.id !== fileId));
 
     // If this was the active file, select another file
     if (activeFileId === fileId && openFiles.length > 1) {
-      const newActiveFile = openFiles.find((f) => f.id !== fileId);
+      const newActiveFile = openFiles.find(f => f.id !== fileId);
       if (newActiveFile) {
         setActiveFileId(newActiveFile.id);
       }
@@ -349,7 +350,7 @@ export default function PlaygroundPage() {
     if (!activeFileId) return;
 
     // Update the local state
-    const updatedFiles = openFiles.map((file) =>
+    const updatedFiles = openFiles.map(file =>
       file.id === activeFileId ? { ...file, content } : file
     );
     setOpenFiles(updatedFiles);
@@ -374,7 +375,7 @@ export default function PlaygroundPage() {
           description: `Language set to ${language}`,
         });
       })
-      .catch((error) => {
+      .catch(error => {
         toast({
           title: "Failed to change language",
           description: "Please try again.",
@@ -399,7 +400,7 @@ export default function PlaygroundPage() {
     setIsRunning(true);
 
     try {
-      const activeFile = openFiles.find((f) => f.id === activeFileId);
+      const activeFile = openFiles.find(f => f.id === activeFileId);
       if (!activeFile) return;
 
       const response = await apiRequest("POST", "/api/execute", {
@@ -442,7 +443,7 @@ export default function PlaygroundPage() {
   // If loading, show loader
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-900">
+      <div className="flex items-center justify-center min-h-screen bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -481,14 +482,14 @@ export default function PlaygroundPage() {
   // If authentication required, show login prompt
   if (accessError?.requiresAuth) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 p-4">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
         <div className="text-amber-500 text-6xl mb-4">
           <i className="ri-lock-line"></i>
         </div>
         <h1 className="text-2xl font-bold text-foreground mb-2">
           Authentication Required
         </h1>
-        <p className="text-gray-400 mb-6">
+        <p className="text-muted-foreground mb-6">
           You need to log in to access this private project. Your session will
           be saved and you'll be redirected back after login.
         </p>
@@ -519,12 +520,14 @@ export default function PlaygroundPage() {
   // If access denied (requires a request), show collaboration request UI
   if (accessError?.requiresRequest) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 p-4">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
         <div className="text-amber-500 text-6xl mb-4">
           <i className="ri-team-line"></i>
         </div>
-        <h1 className="text-2xl font-bold text-foreground mb-2">Private Project</h1>
-        <p className="text-gray-400 mb-6 text-center max-w-md">
+        <h1 className="text-2xl font-bold text-foreground mb-2">
+          Private Project
+        </h1>
+        <p className="text-muted-foreground mb-6 text-center max-w-md">
           This is a private project. You need to request access from the owner.
           Once your request is approved, you'll be able to collaborate on this
           project.
@@ -548,14 +551,14 @@ export default function PlaygroundPage() {
   // Handle general errors
   if (error || !sessionData) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 p-4">
-        <div className="text-red-500 text-6xl mb-4">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4">
+        <div className="text-destructive text-6xl mb-4">
           <i className="ri-error-warning-line"></i>
         </div>
         <h1 className="text-2xl font-bold text-foreground mb-2">
           Failed to load playground
         </h1>
-        <p className="text-gray-400 mb-6">
+        <p className="text-muted-foreground mb-6">
           {error instanceof Error
             ? error.message
             : "An unexpected error occurred"}
@@ -568,11 +571,10 @@ export default function PlaygroundPage() {
   }
 
   // Get the active file
-  const activeFile =
-    openFiles.find((f) => f.id === activeFileId) || openFiles[0];
+  const activeFile = openFiles.find(f => f.id === activeFileId) || openFiles[0];
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-900">
+    <div className="min-h-screen flex flex-col bg-background">
       {/* Session Controls */}
       <SessionControls
         sessionId={sessionData.session.id}
@@ -588,17 +590,18 @@ export default function PlaygroundPage() {
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar (File Explorer) */}
         <div
-          className={`w-56 bg-gray-900 border-r border-gray-700 flex-shrink-0 overflow-auto ${showSidebar ? "block" : "hidden"
-            } md:block`}
+          className={`w-56 bg-card border-r border-border flex-shrink-0 overflow-auto ${
+            showSidebar ? "block" : "hidden"
+          } md:block`}
         >
           {/* Sidebar header */}
-          <div className="flex items-center justify-between px-2 py-2 border-b border-gray-800">
-            <h3 className="text-xs uppercase tracking-wider text-gray-400 font-semibold">
+          <div className="flex items-center justify-between px-2 py-2 border-b border-border">
+            <h3 className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
               Files
             </h3>
             <div className="flex space-x-1">
               <button
-                className="p-1 text-gray-400 hover:text-foreground rounded hover:bg-gray-700 text-xs"
+                className="p-1 text-muted-foreground hover:text-foreground rounded hover:bg-accent text-xs"
                 onClick={() => {
                   // Open the create file dialog in FileExplorer component
                   document.getElementById("create-file-button")?.click();
@@ -607,9 +610,9 @@ export default function PlaygroundPage() {
                 <i className="ri-add-line"></i>
               </button>
               <button
-                className="p-1 text-gray-400 hover:text-foreground rounded hover:bg-gray-700 text-xs"
+                className="p-1 text-muted-foreground hover:text-foreground rounded hover:bg-accent text-xs"
                 onClick={() => {
-                  document.getElementById('upload-file-input')?.click();
+                  document.getElementById("upload-file-input")?.click();
                 }}
               >
                 <i className="ri-upload-2-line"></i>
@@ -628,26 +631,28 @@ export default function PlaygroundPage() {
         </div>
 
         {/* Editor Panel */}
-        <div className="flex-grow flex flex-col bg-gray-900 overflow-hidden">
+        <div className="flex-grow flex flex-col bg-background overflow-hidden">
           {/* Tabbed file navigation */}
-          <div className="bg-gray-800 border-b border-gray-700 flex overflow-x-auto hide-scrollbar">
-            {openFiles.map((file) => (
+          <div className="bg-muted border-b border-border flex overflow-x-auto hide-scrollbar">
+            {openFiles.map(file => (
               <div
                 key={file.id}
-                className={`px-3 py-2 flex items-center border-r border-gray-700 cursor-pointer ${file.id === activeFileId
-                  ? "bg-gray-900 text-foreground"
-                  : "text-gray-400 hover:text-foreground"
-                  }`}
+                className={`px-3 py-2 flex items-center border-r border-border cursor-pointer ${
+                  file.id === activeFileId
+                    ? "bg-background text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
                 onClick={() => handleSelectFileTab(file.id)}
               >
                 <i
-                  className={`${getFileIcon(file.name).icon} ${getFileIcon(file.name).color
-                    } mr-2 text-sm`}
+                  className={`${getFileIcon(file.name).icon} ${
+                    getFileIcon(file.name).color
+                  } mr-2 text-sm`}
                 ></i>
                 <span className="text-sm font-mono">{file.name}</span>
                 <button
-                  className="ml-2 text-gray-500 hover:text-foreground"
-                  onClick={(e) => {
+                  className="ml-2 text-muted-foreground hover:text-foreground"
+                  onClick={e => {
                     e.stopPropagation();
                     handleCloseFileTab(file.id);
                   }}
@@ -669,7 +674,7 @@ export default function PlaygroundPage() {
                 participants={enhancedParticipants}
               />
             ) : (
-              <div className="p-4 text-gray-400">
+              <div className="p-4 text-muted-foreground">
                 No file selected. Create or select a file to start coding.
               </div>
             )}
@@ -691,7 +696,7 @@ export default function PlaygroundPage() {
         <Button
           variant="default"
           size="icon"
-          className="p-3 bg-gray-800 text-foreground rounded-full shadow-lg hover:bg-gray-700"
+          className="p-3 bg-card text-foreground rounded-full shadow-lg hover:bg-accent"
           onClick={() => setShowSidebar(!showSidebar)}
         >
           <i className="ri-folder-line"></i>
@@ -699,7 +704,7 @@ export default function PlaygroundPage() {
         <Button
           variant="default"
           size="icon"
-          className="p-3 bg-primary text-foreground rounded-full shadow-lg hover:bg-primary/90"
+          className="p-3 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90"
           onClick={runCode}
           disabled={isRunning}
         >
@@ -712,7 +717,7 @@ export default function PlaygroundPage() {
         <Button
           variant="default"
           size="icon"
-          className="p-3 bg-gray-800 text-foreground rounded-full shadow-lg hover:bg-gray-700"
+          className="p-3 bg-card text-foreground rounded-full shadow-lg hover:bg-accent"
           onClick={() => setShowCollaborationPanel(!showCollaborationPanel)}
         >
           <i className="ri-terminal-box-line"></i>
@@ -748,6 +753,6 @@ function getFileIcon(fileName: string) {
     case "md":
       return { icon: "ri-markdown-line", color: "text-blue-300" };
     default:
-      return { icon: "ri-file-code-line", color: "text-gray-400" };
+      return { icon: "ri-file-code-line", color: "text-muted-foreground" };
   }
 }

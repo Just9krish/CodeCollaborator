@@ -37,8 +37,9 @@ export default function NotFound() {
                   What happened here?
                 </h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  The page you're looking for might have been moved, deleted, or you typed the wrong URL.
-                  Don't worry, even the best developers get 404s sometimes! 💻✨
+                  The page you're looking for might have been moved, deleted, or
+                  you typed the wrong URL. Don't worry, even the best developers
+                  get 404s sometimes! 💻✨
                 </p>
               </div>
             </div>

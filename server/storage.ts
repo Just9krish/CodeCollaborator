@@ -175,7 +175,7 @@ export class DBStorage implements IStorage {
   async getSessionParticipantsWithUsers(
     sessionId: number,
     activeOnly: boolean = false
-  ): Promise<(SessionParticipant & { username: string; })[]> {
+  ): Promise<(SessionParticipant & { username: string })[]> {
     const filters = [eq(sessionParticipants.sessionId, sessionId)];
 
     if (activeOnly) {
@@ -310,7 +310,7 @@ export class DBStorage implements IStorage {
 
   async updateCollaborationRequest(
     id: number,
-    requestData: Partial<{ status: string; }>
+    requestData: Partial<{ status: string }>
   ): Promise<CollaborationRequest | undefined> {
     const result = await db
       .update(collaborationRequests)
@@ -321,7 +321,10 @@ export class DBStorage implements IStorage {
   }
 
   // Notification operations
-  async getNotifications(userId: number, unreadOnly: boolean = false): Promise<Notification[]> {
+  async getNotifications(
+    userId: number,
+    unreadOnly: boolean = false
+  ): Promise<Notification[]> {
     const filters = [eq(notifications.userId, userId)];
 
     if (unreadOnly) {
@@ -336,12 +339,20 @@ export class DBStorage implements IStorage {
   }
 
   async getNotification(id: number): Promise<Notification | undefined> {
-    const result = await db.select().from(notifications).where(eq(notifications.id, id));
+    const result = await db
+      .select()
+      .from(notifications)
+      .where(eq(notifications.id, id));
     return result[0];
   }
 
-  async createNotification(notification: InsertNotification): Promise<Notification> {
-    const result = await db.insert(notifications).values(notification).returning();
+  async createNotification(
+    notification: InsertNotification
+  ): Promise<Notification> {
+    const result = await db
+      .insert(notifications)
+      .values(notification)
+      .returning();
     return result[0];
   }
 
@@ -362,7 +373,9 @@ export class DBStorage implements IStorage {
   }
 
   async deleteNotification(id: number): Promise<boolean> {
-    const result = await db.delete(notifications).where(eq(notifications.id, id));
+    const result = await db
+      .delete(notifications)
+      .where(eq(notifications.id, id));
     return !!result;
   }
 
@@ -370,7 +383,9 @@ export class DBStorage implements IStorage {
     const result = await db
       .select({ count: sql`count(*)` })
       .from(notifications)
-      .where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)));
+      .where(
+        and(eq(notifications.userId, userId), eq(notifications.isRead, false))
+      );
     return Number(result[0]?.count || 0);
   }
 }

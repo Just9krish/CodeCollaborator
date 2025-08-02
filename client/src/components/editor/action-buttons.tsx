@@ -25,7 +25,7 @@ import { FaSave, FaCodeBranch } from "react-icons/fa";
 type ActionButtonsProps = {
   sessionId: number;
   sessionName: string;
-  activeFile: { id: number; content: string; name: string; };
+  activeFile: { id: number; content: string; name: string };
   language: string;
   onExecute: (result: ExecutionResult) => void;
   isRunning: boolean;

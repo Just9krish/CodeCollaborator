@@ -35,7 +35,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const clients = new Set<ClientConnection>();
 
   // Handle WebSocket connections
-  wss.on("connection", (ws) => {
+  wss.on("connection", ws => {
     const client: ClientConnection = {
       ws,
       userId: -1, // Will be set when user joins session
@@ -45,7 +45,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     clients.add(client);
     notificationService.registerClient(client);
 
-    ws.on("message", async (rawMessage) => {
+    ws.on("message", async rawMessage => {
       try {
         const message = JSON.parse(rawMessage.toString());
 
@@ -77,7 +77,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 message.sessionId
               );
               const isParticipant = participants.some(
-                (p) => p.userId === client.userId
+                p => p.userId === client.userId
               );
 
               if (!isParticipant) {
@@ -86,7 +86,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   client.userId
                 );
                 const hasAccess = requests.some(
-                  (r) =>
+                  r =>
                     r.sessionId === message.sessionId && r.status === "accepted"
                 );
 
@@ -112,7 +112,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 message.sessionId
               );
               const existingParticipant = participants.find(
-                (p) => p.userId === client.userId
+                p => p.userId === client.userId
               );
 
               if (existingParticipant) {
@@ -162,11 +162,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           case "cursor_update":
             if (client.sessionId && client.userId > 0) {
               // Find the participant and update cursor
-              const participants = await storage.getSessionParticipantsWithUsers(
-                client.sessionId
-              );
+              const participants =
+                await storage.getSessionParticipantsWithUsers(client.sessionId);
               const participant = participants.find(
-                (p) => p.userId === client.userId
+                p => p.userId === client.userId
               );
 
               if (participant) {
@@ -267,7 +266,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   function broadcastToUser(userId: number, message: any) {
-    clients.forEach((client) => {
+    clients.forEach(client => {
       if (client.userId === userId && client.ws.readyState === WebSocket.OPEN) {
         client.ws.send(JSON.stringify(message));
       }
@@ -280,7 +279,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     message: any,
     excludeClient?: ClientConnection
   ) {
-    clients.forEach((client) => {
+    clients.forEach(client => {
       if (
         client.sessionId === sessionId &&
         client.ws.readyState === WebSocket.OPEN &&
@@ -366,7 +365,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Check if user is a participant
           const participants = await storage.getSessionParticipants(sessionId);
           const isParticipant = participants.some(
-            (p) => p.userId === req.user!.id
+            p => p.userId === req.user!.id
           );
 
           if (!isParticipant) {
@@ -375,7 +374,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               req.user!.id
             );
             const hasAccess = requests.some(
-              (r) => r.sessionId === sessionId && r.status === "accepted"
+              r => r.sessionId === sessionId && r.status === "accepted"
             );
 
             if (!hasAccess) {
@@ -392,7 +391,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // User has access, retrieve session data
       const files = await storage.getFilesBySession(sessionId);
-      const participants = await storage.getSessionParticipantsWithUsers(sessionId, false);
+      const participants = await storage.getSessionParticipantsWithUsers(
+        sessionId,
+        false
+      );
 
       return res.status(200).json({ session, files, participants });
     } catch (error) {
@@ -581,7 +583,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .json({ message: "Code and language are required" });
       }
 
-      const supportedLanguage = languages.find((lang) => lang.id === language);
+      const supportedLanguage = languages.find(lang => lang.id === language);
       if (!supportedLanguage) {
         return res.status(400).json({ message: "Unsupported language" });
       }
@@ -626,7 +628,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           req.user!.id
         );
         const existingRequest = existingRequests.find(
-          (r) => r.sessionId === sessionId && r.status === "pending"
+          r => r.sessionId === sessionId && r.status === "pending"
         );
 
         if (existingRequest) {
@@ -688,7 +690,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Add username to each request
         const requestsWithUsernames = await Promise.all(
-          requests.map(async (request) => {
+          requests.map(async request => {
             const requester = await storage.getUser(request.fromUserId);
             return {
               ...request,
@@ -747,7 +749,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (status === "accepted") {
         const participants = await storage.getSessionParticipants(session.id);
         const existingParticipant = participants.find(
-          (p) => p.userId === request.fromUserId
+          p => p.userId === request.fromUserId
         );
 
         if (!existingParticipant) {
@@ -786,7 +788,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const unreadOnly = req.query.unread === "true";
-      const notifications = await storage.getNotifications(req.user!.id, unreadOnly);
+      const notifications = await storage.getNotifications(
+        req.user!.id,
+        unreadOnly
+      );
       return res.status(200).json(notifications);
     } catch (error) {
       console.error("Error fetching notifications:", error);
@@ -822,14 +827,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (notification.userId !== req.user!.id) {
-        return res.status(403).json({ message: "Not authorized to update this notification" });
+        return res
+          .status(403)
+          .json({ message: "Not authorized to update this notification" });
       }
 
-      const updatedNotification = await storage.markNotificationAsRead(notificationId);
+      const updatedNotification =
+        await storage.markNotificationAsRead(notificationId);
       return res.status(200).json(updatedNotification);
     } catch (error) {
       console.error("Error marking notification as read:", error);
-      return res.status(500).json({ message: "Failed to mark notification as read" });
+      return res
+        .status(500)
+        .json({ message: "Failed to mark notification as read" });
     }
   });
 
@@ -840,10 +850,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       await storage.markAllNotificationsAsRead(req.user!.id);
-      return res.status(200).json({ message: "All notifications marked as read" });
+      return res
+        .status(200)
+        .json({ message: "All notifications marked as read" });
     } catch (error) {
       console.error("Error marking all notifications as read:", error);
-      return res.status(500).json({ message: "Failed to mark all notifications as read" });
+      return res
+        .status(500)
+        .json({ message: "Failed to mark all notifications as read" });
     }
   });
 
@@ -861,14 +875,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (notification.userId !== req.user!.id) {
-        return res.status(403).json({ message: "Not authorized to delete this notification" });
+        return res
+          .status(403)
+          .json({ message: "Not authorized to delete this notification" });
       }
 
       const success = await storage.deleteNotification(notificationId);
       if (success) {
         return res.status(200).json({ message: "Notification deleted" });
       } else {
-        return res.status(500).json({ message: "Failed to delete notification" });
+        return res
+          .status(500)
+          .json({ message: "Failed to delete notification" });
       }
     } catch (error) {
       console.error("Error deleting notification:", error);

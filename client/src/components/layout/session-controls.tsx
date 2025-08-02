@@ -74,26 +74,26 @@ export function SessionControls({
   };
 
   return (
-    <div className="bg-gray-800 border-b border-gray-700 py-2 px-4">
+    <div className="bg-muted border-b border-border py-2 px-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         {/* Session Info */}
         <div className="flex items-center space-x-4">
           <div className="flex items-center">
-            <i className="ri-file-code-line text-gray-400 mr-2"></i>
+            <i className="ri-file-code-line text-muted-foreground mr-2"></i>
             {isEditing ? (
               <Input
                 type="text"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={e => setName(e.target.value)}
                 onBlur={handleNameChange}
                 onKeyDown={handleKeyDown}
                 autoFocus
-                className="bg-transparent border border-gray-600 hover:border-gray-500 rounded px-2 py-1 text-sm font-medium focus:outline-none text-foreground h-auto w-auto"
+                className="bg-transparent border border-border hover:border-accent rounded px-2 py-1 text-sm font-medium focus:outline-none text-foreground h-auto w-auto"
               />
             ) : (
               <button
                 onClick={() => setIsEditing(true)}
-                className="bg-transparent border border-transparent hover:border-gray-600 rounded px-2 py-1 text-sm font-medium text-foreground"
+                className="bg-transparent border border-transparent hover:border-border rounded px-2 py-1 text-sm font-medium text-foreground"
               >
                 {name || "Untitled Project"}
               </button>

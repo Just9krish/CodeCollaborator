@@ -61,7 +61,7 @@ function getFileIcon(fileName: string) {
     case "md":
       return { icon: "ri-markdown-line", color: "text-blue-300" };
     default:
-      return { icon: "ri-file-code-line", color: "text-gray-400" };
+      return { icon: "ri-file-code-line", color: "text-muted-foreground" };
   }
 }
 
@@ -76,8 +76,9 @@ function FileItem({
 
   return (
     <div
-      className={`file-item group flex items-center py-1 px-2 rounded cursor-pointer hover:bg-gray-800 text-gray-300 hover:text-foreground ${isActive ? "bg-gray-800 text-foreground" : ""
-        }`}
+      className={`file-item group flex items-center py-1 px-2 rounded cursor-pointer hover:bg-accent text-muted-foreground hover:text-foreground ${
+        isActive ? "bg-accent text-foreground" : ""
+      }`}
       onClick={onSelect}
     >
       <i className={`${icon} ${color} mr-2 text-sm`}></i>
@@ -87,8 +88,8 @@ function FileItem({
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                className="p-0.5 text-gray-400 hover:text-foreground rounded hover:bg-gray-700 text-xs"
-                onClick={(e) => {
+                className="p-0.5 text-muted-foreground hover:text-foreground rounded hover:bg-accent text-xs"
+                onClick={e => {
                   e.stopPropagation();
                   onRename(file.name);
                 }}
@@ -106,8 +107,8 @@ function FileItem({
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                className="p-0.5 text-gray-400 hover:text-foreground rounded hover:bg-gray-700 text-xs"
-                onClick={(e) => {
+                className="p-0.5 text-muted-foreground hover:text-foreground rounded hover:bg-accent text-xs"
+                onClick={e => {
                   e.stopPropagation();
                   onDelete();
                 }}
@@ -141,12 +142,14 @@ export function FileExplorer({
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = async (e) => {
+    reader.onload = async e => {
       const content = e.target?.result as string;
 
       try {
@@ -245,7 +248,7 @@ export function FileExplorer({
 
       // If the deleted file was active, select another file
       if (currentFile.id === activeFileId && files.length > 1) {
-        const otherFile = files.find((f) => f.id !== currentFile.id);
+        const otherFile = files.find(f => f.id !== currentFile.id);
         if (otherFile) {
           onFileSelect(otherFile.id);
         }
@@ -266,7 +269,7 @@ export function FileExplorer({
       />
 
       <input
-        id='upload-file-input'
+        id="upload-file-input"
         type="file"
         ref={fileInputRef}
         className="hidden"
@@ -274,14 +277,13 @@ export function FileExplorer({
         onChange={handleFileUpload}
       />
 
-
-      {files.map((file) => (
+      {files.map(file => (
         <FileItem
           key={file.id}
           file={file}
           isActive={file.id === activeFileId}
           onSelect={() => onFileSelect(file.id)}
-          onRename={(name) => {
+          onRename={name => {
             setCurrentFile(file);
             setNewFileName(name);
             setIsRenamingFile(true);
@@ -295,16 +297,18 @@ export function FileExplorer({
 
       {/* Create File Dialog */}
       <Dialog open={isCreatingFile} onOpenChange={setIsCreatingFile}>
-        <DialogContent className="bg-gray-800 text-foreground border border-gray-700">
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create New File</DialogTitle>
+            <DialogTitle className="text-foreground">
+              Create New File
+            </DialogTitle>
           </DialogHeader>
           <div className="py-4">
             <Input
-              className="bg-gray-900 border-gray-700 text-foreground"
+              className="bg-background border-border text-foreground"
               placeholder="File name (e.g. main.js)"
               value={newFileName}
-              onChange={(e) => setNewFileName(e.target.value)}
+              onChange={e => setNewFileName(e.target.value)}
             />
             {error && (
               <Alert variant="destructive" className="mt-2 py-2">
@@ -330,16 +334,16 @@ export function FileExplorer({
 
       {/* Rename File Dialog */}
       <Dialog open={isRenamingFile} onOpenChange={setIsRenamingFile}>
-        <DialogContent className="bg-gray-800 text-foreground border border-gray-700">
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>Rename File</DialogTitle>
+            <DialogTitle className="text-foreground">Rename File</DialogTitle>
           </DialogHeader>
           <div className="py-4">
             <Input
-              className="bg-gray-900 border-gray-700 text-foreground"
+              className="bg-background border-border text-foreground"
               placeholder="New file name"
               value={newFileName}
-              onChange={(e) => setNewFileName(e.target.value)}
+              onChange={e => setNewFileName(e.target.value)}
             />
             {error && (
               <Alert variant="destructive" className="mt-2 py-2">
@@ -366,13 +370,17 @@ export function FileExplorer({
 
       {/* Delete File Confirmation Dialog */}
       <Dialog open={isDeletingFile} onOpenChange={setIsDeletingFile}>
-        <DialogContent className="bg-gray-800 text-foreground border border-gray-700">
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>Confirm Deletion</DialogTitle>
+            <DialogTitle className="text-foreground">
+              Confirm Deletion
+            </DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <p>Are you sure you want to delete "{currentFile?.name}"?</p>
-            <p className="text-sm text-gray-400 mt-2">
+            <p className="text-foreground">
+              Are you sure you want to delete "{currentFile?.name}"?
+            </p>
+            <p className="text-sm text-muted-foreground mt-2">
               This action cannot be undone.
             </p>
           </div>

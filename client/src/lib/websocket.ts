@@ -8,16 +8,16 @@ import { ExecutionResult } from "server/code-executor";
 
 // Types
 type WsEventHandler = (message: any) => void;
-type CursorPosition = { line: number; column: number; fileId: number; };
+type CursorPosition = { line: number; column: number; fileId: number };
 
 type WebSocketMessage =
-  | { type: "auth"; userId: number; }
-  | { type: "join_session"; sessionId: number; cursor?: CursorPosition | null; }
-  | { type: "leave_session"; }
-  | { type: "cursor_update"; cursor: CursorPosition; }
-  | { type: "code_change"; fileId: number; content: string; }
-  | { type: "chat_message"; content: string; }
-  | { type: "notification"; notification: any; };
+  | { type: "auth"; userId: number }
+  | { type: "join_session"; sessionId: number; cursor?: CursorPosition | null }
+  | { type: "leave_session" }
+  | { type: "cursor_update"; cursor: CursorPosition }
+  | { type: "code_change"; fileId: number; content: string }
+  | { type: "chat_message"; content: string }
+  | { type: "notification"; notification: any };
 
 class WebSocketManager {
   private socket: WebSocket | null = null;
@@ -75,12 +75,12 @@ class WebSocketManager {
       }, 3000);
     };
 
-    this.socket.onerror = (error) => {
+    this.socket.onerror = error => {
       console.error("WebSocket error:", error);
       this.trigger("error", { error });
     };
 
-    this.socket.onmessage = (event) => {
+    this.socket.onmessage = event => {
       try {
         const message = JSON.parse(event.data);
         // Trigger event handlers for this message type
@@ -173,7 +173,7 @@ class WebSocketManager {
     const handlers = this.eventHandlers.get(eventType);
 
     if (handlers) {
-      handlers.forEach((handler) => {
+      handlers.forEach(handler => {
         try {
           handler(data);
         } catch (error) {

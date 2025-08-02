@@ -60,7 +60,7 @@ function executeJavaScript(code: string): ExecutionResult {
       console: {
         log: (...args: any[]) => {
           const formattedArgs = args
-            .map((arg) =>
+            .map(arg =>
               typeof arg === "object" ? JSON.stringify(arg) : String(arg)
             )
             .join(" ");
