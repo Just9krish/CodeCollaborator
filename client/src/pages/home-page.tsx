@@ -45,11 +45,11 @@ export default function HomePage() {
   const [newProjectName, setNewProjectName] = useState("");
   const [isPublic, setIsPublic] = useState(false);
   const [projectLanguage, setProjectLanguage] = useState("javascript");
-  const [newSessionId, setNewSessionId] = useState<number | null>(null);
+  const [newSessionId, setNewSessionId] = useState<string | null>(null);
   const [sharingUrl, setSharingUrl] = useState("");
   const urlInputRef = useRef<HTMLInputElement>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [sessionIdToDelete, setSessionIdToDelete] = useState<number | null>(
+  const [sessionIdToDelete, setSessionIdToDelete] = useState<string | null>(
     null
   );
 
@@ -104,7 +104,7 @@ export default function HomePage() {
   });
 
   const deleteSessionMutation = useMutation({
-    mutationFn: async (sessionId: number) => {
+    mutationFn: async (sessionId: string) => {
       if (!user) throw new Error("User not authenticated");
       const response = await apiRequest("DELETE", `/api/sessions/${sessionId}`);
       if (!response.ok) {
@@ -125,7 +125,7 @@ export default function HomePage() {
     },
   });
 
-  const handleDeleteSession = (sessionId: number) => {
+  const handleDeleteSession = (sessionId: string) => {
     setSessionIdToDelete(sessionId);
     setIsDeleteDialogOpen(true);
   };
@@ -260,11 +260,10 @@ export default function HomePage() {
                 sessions.map(session => (
                   <Link to={`/playground/${session.id}`} key={session.id}>
                     <Card
-                      className={`border-border hover:border-primary transition-colors cursor-pointer ${
-                        session.isPublic
-                          ? "hover:border-primary/60 hover:bg-primary/5"
-                          : "hover:border-secondary/60 hover:bg-secondary/5"
-                      }`}
+                      className={`border-border hover:border-primary transition-colors cursor-pointer ${session.isPublic
+                        ? "hover:border-primary/60 hover:bg-primary/5"
+                        : "hover:border-secondary/60 hover:bg-secondary/5"
+                        }`}
                     >
                       <CardHeader className="pb-2">
                         <CardTitle className="text-foreground">
@@ -280,11 +279,10 @@ export default function HomePage() {
                         </CardDescription>
                         {/* Status indicator */}
                         <div
-                          className={`w-2 h-2 rounded-full mt-2 ${
-                            session.isPublic
-                              ? "bg-primary"
-                              : "bg-secondary-foreground"
-                          }`}
+                          className={`w-2 h-2 rounded-full mt-2 ${session.isPublic
+                            ? "bg-primary"
+                            : "bg-secondary-foreground"
+                            }`}
                         ></div>
                       </CardHeader>
                       <CardContent className="text-muted-foreground">

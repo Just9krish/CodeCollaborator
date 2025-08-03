@@ -31,7 +31,6 @@ export type User = typeof users.$inferSelect;
 
 export const sessions = pgTable("sessions", {
   id: uuid("id").primaryKey().defaultRandom(),
-  slug: text("slug").notNull().unique(),
   name: text("name").notNull(),
   ownerId: uuid("owner_id")
     .notNull()
@@ -44,7 +43,6 @@ export const sessions = pgTable("sessions", {
 
 export const insertSessionSchema = createInsertSchema(sessions).pick({
   name: true,
-  slug: true,
   ownerId: true,
   language: true,
   isPublic: true,
@@ -208,11 +206,3 @@ export const insertNotificationSchema = createInsertSchema(notifications).pick({
 
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 export type Notification = typeof notifications.$inferSelect;
-
-// Re-export utility functions
-export {
-  generateSlug,
-  generateUniqueSlug,
-  generateId,
-  generateProjectSlug,
-} from "./utils";
