@@ -31,11 +31,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create WebSocket server for real-time collaboration
   const wss = new WebSocketServer({ server: httpServer, path: "/ws" });
 
+  // Log WebSocket server setup
+  console.log("WebSocket server created on path: /ws");
+
   // Track client connections
   const clients = new Set<ClientConnection>();
 
   // Handle WebSocket connections
   wss.on("connection", ws => {
+    console.log("WebSocket client connected");
+
     const client: ClientConnection = {
       ws,
       userId: "", // Will be set when user joins session
@@ -44,6 +49,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     clients.add(client);
     notificationService.registerClient(client);
+
+    // Handle WebSocket errors
+    ws.on("error", (error) => {
+      console.error("WebSocket client error:", error);
+    });
+
+    ws.on("close", () => {
+      console.log("WebSocket client disconnected");
+      clients.delete(client);
+    });
 
     ws.on("message", async rawMessage => {
       try {
