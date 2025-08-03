@@ -33,4 +33,11 @@ export default defineConfig({
     outDir: path.resolve(__dirname, "dist/public"),
     emptyOutDir: true,
   },
+  optimizeDeps: {
+    include: ["monaco-editor"],
+  },
+  define: {
+    // Fix Monaco Editor module resolution issues
+    "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),
+  },
 });

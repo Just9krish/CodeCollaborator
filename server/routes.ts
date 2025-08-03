@@ -51,7 +51,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     notificationService.registerClient(client);
 
     // Handle WebSocket errors
-    ws.on("error", (error) => {
+    ws.on("error", error => {
       console.error("WebSocket client error:", error);
     });
 

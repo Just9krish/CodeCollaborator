@@ -3,13 +3,28 @@ import * as monaco from "monaco-editor";
 import { Loader2 } from "lucide-react";
 import { wsManager, type CursorPosition } from "@/lib/websocket";
 
+// Configure Monaco Editor for Vite
+const configureMonaco = () => {
+  // Disable Monaco's built-in workers to avoid module resolution issues
+  self.MonacoEnvironment = {
+    getWorker: function (moduleId, label) {
+      // Return a dummy worker to avoid the moduleIdToUrl issue
+      return new Promise(() => {
+        // This prevents the error but disables language services
+      });
+    },
+  };
+};
+
 // Load the Monaco Editor assets dynamically
 const loadMonacoScripts = async () => {
-  await import("monaco-editor/esm/vs/editor/editor.all.js");
-  await import("monaco-editor/esm/vs/language/typescript/ts.worker");
-  await import("monaco-editor/esm/vs/language/json/json.worker");
-  await import("monaco-editor/esm/vs/language/css/css.worker");
-  await import("monaco-editor/esm/vs/language/html/html.worker");
+  // Configure Monaco before loading
+  configureMonaco();
+
+  // Load only basic editor functionality to avoid worker issues
+  await import("monaco-editor/esm/vs/editor/editor.api.js");
+
+  // Load basic language support without TypeScript services
   await import(
     "monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution"
   );
@@ -39,6 +54,7 @@ type MonacoEditorProps = {
 // Map language IDs to Monaco language IDs
 const languageMap: Record<string, string> = {
   javascript: "javascript",
+  typescript: "javascript", // Use JavaScript mode for TypeScript to avoid worker issues
   python: "python",
   java: "java",
   cpp: "cpp",
@@ -90,7 +106,8 @@ export function MonacoEditor({
 
         const monacoLanguage = languageMap[language] || "javascript";
 
-        // Create the editor
+        // Create the editor with error handling
+        // Create the editor with error handling
         const editor = monaco.editor.create(containerRef.current, {
           value,
           language: monacoLanguage,
@@ -105,6 +122,11 @@ export function MonacoEditor({
           smoothScrolling: true,
           wordWrap: "on",
           padding: { top: 10 },
+          // Disable features that might trigger worker loading
+          quickSuggestions: false,
+          parameterHints: { enabled: false },
+          suggestOnTriggerCharacters: false,
+          acceptSuggestionOnEnter: "off",
         });
 
         editorRef.current = editor;

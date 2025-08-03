@@ -260,10 +260,11 @@ export default function HomePage() {
                 sessions.map(session => (
                   <Link to={`/playground/${session.id}`} key={session.id}>
                     <Card
-                      className={`border-border hover:border-primary transition-colors cursor-pointer ${session.isPublic
-                        ? "hover:border-primary/60 hover:bg-primary/5"
-                        : "hover:border-secondary/60 hover:bg-secondary/5"
-                        }`}
+                      className={`border-border hover:border-primary transition-colors cursor-pointer ${
+                        session.isPublic
+                          ? "hover:border-primary/60 hover:bg-primary/5"
+                          : "hover:border-secondary/60 hover:bg-secondary/5"
+                      }`}
                     >
                       <CardHeader className="pb-2">
                         <CardTitle className="text-foreground">
@@ -279,10 +280,11 @@ export default function HomePage() {
                         </CardDescription>
                         {/* Status indicator */}
                         <div
-                          className={`w-2 h-2 rounded-full mt-2 ${session.isPublic
-                            ? "bg-primary"
-                            : "bg-secondary-foreground"
-                            }`}
+                          className={`w-2 h-2 rounded-full mt-2 ${
+                            session.isPublic
+                              ? "bg-primary"
+                              : "bg-secondary-foreground"
+                          }`}
                         ></div>
                       </CardHeader>
                       <CardContent className="text-muted-foreground">
