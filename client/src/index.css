@@ -164,11 +164,6 @@
   }
 }
 
-/* Custom classes for the application */
-.bg-dark {
-  background-color: #1f2937;
-}
-
 /* Hide scrollbar but allow scrolling */
 .hide-scrollbar {
   -ms-overflow-style: none; /* IE and Edge */

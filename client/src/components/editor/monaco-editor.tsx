@@ -226,7 +226,7 @@ export function MonacoEditor({
   return (
     <div className="h-full relative">
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-10">
+        <div className="absolute inset-0 flex items-center justify-center bg-background z-10">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       )}

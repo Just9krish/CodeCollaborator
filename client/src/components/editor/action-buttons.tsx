@@ -24,7 +24,7 @@ import { FaSave, FaCodeBranch } from "react-icons/fa";
 type ActionButtonsProps = {
   sessionId: string;
   sessionName: string;
-  activeFile: { id: string; content: string; name: string; };
+  activeFile: { id: string; content: string; name: string };
   language: string;
   onExecute: (result: ExecutionResult) => void;
   isRunning: boolean;
@@ -189,19 +189,15 @@ export function ActionButtons({
       </Button>
 
       <Dialog open={isSharing} onOpenChange={setIsSharing}>
-        <DialogContent className="bg-gray-800 text-foreground border border-gray-700">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Share Project</DialogTitle>
-            <DialogDescription className="text-gray-400">
+            <DialogDescription>
               Anyone with this link can access and collaborate on this project.
             </DialogDescription>
           </DialogHeader>
           <div className="flex items-center space-x-2">
-            <Input
-              value={shareableLink}
-              readOnly
-              className="bg-gray-900 border-gray-700 text-foreground"
-            />
+            <Input value={shareableLink} readOnly />
             <Button onClick={copyLink}>
               <FaClipboard />
               Copy
