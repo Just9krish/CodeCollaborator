@@ -24,12 +24,12 @@ const loadMonacoScripts = async () => {
 type MonacoEditorProps = {
   value: string;
   language: string;
-  fileId: number;
+  fileId: string;
   readOnly?: boolean;
   onChange?: (value: string) => void;
   participants?: Array<{
-    id: number;
-    userId: number;
+    id: string;
+    userId: string;
     username: string;
     cursor: CursorPosition | null;
     color: string;

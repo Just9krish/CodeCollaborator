@@ -17,8 +17,8 @@ import {
 // Type for WebSocket clients with session information
 type ClientConnection = {
   ws: WebSocket;
-  userId: number;
-  sessionId: number | null;
+  userId: string;
+  sessionId: string | null;
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -38,7 +38,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   wss.on("connection", ws => {
     const client: ClientConnection = {
       ws,
-      userId: -1, // Will be set when user joins session
+      userId: "", // Will be set when user joins session
       sessionId: null,
     };
 
@@ -69,7 +69,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Check if user has access to session
             if (
               !session.isPublic &&
-              client.userId > 0 &&
+              client.userId !== "" &&
               session.ownerId !== client.userId
             ) {
               // Check if user is a participant
@@ -106,7 +106,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // User has access, join the session
             client.sessionId = message.sessionId;
 
-            if (client.userId > 0) {
+            if (client.userId !== "") {
               // Check if user is already a participant
               const participants = await storage.getSessionParticipants(
                 message.sessionId
@@ -143,7 +143,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             break;
 
           case "leave_session":
-            if (client.sessionId && client.userId > 0) {
+            if (client.sessionId && client.userId !== "") {
               await storage.removeParticipant(client.sessionId, client.userId);
 
               // Notify other clients
@@ -160,7 +160,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             break;
 
           case "cursor_update":
-            if (client.sessionId && client.userId > 0) {
+            if (client.sessionId && client.userId !== "") {
               // Find the participant and update cursor
               const participants =
                 await storage.getSessionParticipantsWithUsers(client.sessionId);
@@ -210,7 +210,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             break;
 
           case "chat_message":
-            if (client.sessionId && client.userId > 0) {
+            if (client.sessionId && client.userId !== "") {
               // Store message
               const newMessage = await storage.createMessage({
                 content: message.content,
@@ -247,7 +247,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     // Handle disconnection
     ws.on("close", async () => {
-      if (client.sessionId && client.userId > 0) {
+      if (client.sessionId && client.userId !== "") {
         // Mark the user as inactive in the session
         await storage.removeParticipant(client.sessionId, client.userId);
 
@@ -265,7 +265,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  function broadcastToUser(userId: number, message: any) {
+  function broadcastToUser(userId: string, message: any) {
     clients.forEach(client => {
       if (client.userId === userId && client.ws.readyState === WebSocket.OPEN) {
         client.ws.send(JSON.stringify(message));
@@ -275,7 +275,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Helper function to broadcast messages to all clients in a session
   function broadcastToSession(
-    sessionId: number,
+    sessionId: string,
     message: any,
     excludeClient?: ClientConnection
   ) {
@@ -341,7 +341,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/sessions/:id", async (req, res) => {
     try {
-      const sessionId = parseInt(req.params.id);
+      const sessionId = req.params.id;
       const session = await storage.getSession(sessionId);
 
       if (!session) {
@@ -408,7 +408,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(401).json({ message: "Unauthorized" });
 
     try {
-      const sessionId = parseInt(req.params.id);
+      const sessionId = req.params.id;
       const session = await storage.getSession(sessionId);
 
       if (!session) {
@@ -434,7 +434,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(401).json({ message: "Unauthorized" });
 
     try {
-      const sessionId = parseInt(req.params.id);
+      const sessionId = req.params.id;
       const session = await storage.getSession(sessionId);
 
       if (!session) {
@@ -468,7 +468,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(401).json({ message: "Unauthorized" });
 
     try {
-      const sessionId = parseInt(req.params.sessionId);
+      const sessionId = req.params.sessionId;
       const session = await storage.getSession(sessionId);
 
       if (!session) {
@@ -504,7 +504,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(401).json({ message: "Unauthorized" });
 
     try {
-      const fileId = parseInt(req.params.id);
+      const fileId = req.params.id;
       const file = await storage.getFile(fileId);
 
       if (!file) {
@@ -533,7 +533,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(401).json({ message: "Unauthorized" });
 
     try {
-      const fileId = parseInt(req.params.id);
+      const fileId = req.params.id;
       const file = await storage.getFile(fileId);
 
       if (!file) {
@@ -563,7 +563,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Messages
   app.get("/api/sessions/:sessionId/messages", async (req, res) => {
     try {
-      const sessionId = parseInt(req.params.sessionId);
+      const sessionId = req.params.sessionId;
       const messages = await storage.getMessagesBySession(sessionId);
       return res.status(200).json(messages);
     } catch (error) {
@@ -609,7 +609,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Unauthorized" });
 
       try {
-        const sessionId = parseInt(req.params.sessionId);
+        const sessionId = req.params.sessionId;
         const session = await storage.getSession(sessionId);
 
         if (!session) {
@@ -670,7 +670,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       try {
-        const sessionId = parseInt(req.params.sessionId);
+        const sessionId = req.params.sessionId;
         const session = await storage.getSession(sessionId);
         const status = req.query.status as string;
 
@@ -684,8 +684,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         const requests = await storage.getCollaborationRequestsBySession(
-          sessionId,
-          status
+          sessionId
+          // status
         );
 
         // Add username to each request
@@ -714,7 +714,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(401).json({ message: "Unauthorized" });
 
     try {
-      const requestId = parseInt(req.params.id);
+      const requestId = req.params.id;
       const request = await storage.getCollaborationRequest(requestId);
 
       if (!request) {
@@ -789,8 +789,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const unreadOnly = req.query.unread === "true";
       const notifications = await storage.getNotifications(
-        req.user!.id,
-        unreadOnly
+        req.user!.id
+        // unreadOnly
       );
       return res.status(200).json(notifications);
     } catch (error) {
@@ -819,7 +819,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const notificationId = parseInt(req.params.id);
+      const notificationId = req.params.id;
       const notification = await storage.getNotification(notificationId);
 
       if (!notification) {
@@ -867,7 +867,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const notificationId = parseInt(req.params.id);
+      const notificationId = req.params.id;
       const notification = await storage.getNotification(notificationId);
 
       if (!notification) {

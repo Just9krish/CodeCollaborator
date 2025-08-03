@@ -16,8 +16,8 @@ export type NotificationType =
 // WebSocket clients tracking
 type ClientConnection = {
   ws: WebSocket;
-  userId: number;
-  sessionId: number | null;
+  userId: string;
+  sessionId: string | null;
 };
 
 class NotificationService {
@@ -35,7 +35,7 @@ class NotificationService {
 
   // Create and send a notification
   async createNotification(
-    userId: number,
+    userId: string,
     type: NotificationType,
     title: string,
     message: string,
@@ -63,7 +63,7 @@ class NotificationService {
   }
 
   // Send notification to specific user via WebSocket
-  private sendNotificationToUser(userId: number, notification: any) {
+  private sendNotificationToUser(userId: string, notification: any) {
     const userClients = Array.from(this.clients).filter(
       c => c.userId === userId
     );
@@ -82,9 +82,9 @@ class NotificationService {
 
   // Send notification to all clients in a session
   sendNotificationToSession(
-    sessionId: number,
+    sessionId: string,
     notification: any,
-    excludeUserId?: number
+    excludeUserId?: string
   ) {
     const sessionClients = Array.from(this.clients).filter(
       c => c.sessionId === sessionId && c.userId !== excludeUserId
@@ -104,9 +104,9 @@ class NotificationService {
 
   // Helper methods for common notification types
   async notifyCollaborationRequest(
-    sessionId: number,
-    fromUserId: number,
-    toUserId: number,
+    sessionId: string,
+    fromUserId: string,
+    toUserId: string,
     sessionName: string
   ) {
     const fromUser = await storage.getUser(fromUserId);
@@ -127,9 +127,9 @@ class NotificationService {
   }
 
   async notifyRequestResponse(
-    sessionId: number,
-    fromUserId: number,
-    toUserId: number,
+    sessionId: string,
+    fromUserId: string,
+    toUserId: string,
     status: "accepted" | "rejected",
     sessionName: string
   ) {
@@ -152,8 +152,8 @@ class NotificationService {
   }
 
   async notifyUserJoined(
-    sessionId: number,
-    userId: number,
+    sessionId: string,
+    userId: string,
     sessionName: string
   ) {
     const user = await storage.getUser(userId);
@@ -180,7 +180,7 @@ class NotificationService {
     }
   }
 
-  async notifyUserLeft(sessionId: number, userId: number, sessionName: string) {
+  async notifyUserLeft(sessionId: string, userId: string, sessionName: string) {
     const user = await storage.getUser(userId);
     const username = user?.username || `User ${userId}`;
 

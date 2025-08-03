@@ -8,7 +8,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
@@ -23,9 +22,9 @@ import { FaPlay, FaShareNodes, FaClipboard } from "react-icons/fa6";
 import { FaSave, FaCodeBranch } from "react-icons/fa";
 
 type ActionButtonsProps = {
-  sessionId: number;
+  sessionId: string;
   sessionName: string;
-  activeFile: { id: number; content: string; name: string };
+  activeFile: { id: string; content: string; name: string; };
   language: string;
   onExecute: (result: ExecutionResult) => void;
   isRunning: boolean;

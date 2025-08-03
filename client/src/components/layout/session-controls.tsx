@@ -8,7 +8,7 @@ import { File } from "@shared/schema";
 import { ExecutionResult } from "@/lib/websocket";
 
 type SessionControlsProps = {
-  sessionId: number;
+  sessionId: string;
   sessionName: string;
   language: string;
   onLanguageChange: (language: string) => void;
@@ -74,7 +74,7 @@ export function SessionControls({
   };
 
   return (
-    <div className="bg-muted border-b border-border py-2 px-4">
+    <div className="bg-background border-b border-border py-2 px-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         {/* Session Info */}
         <div className="flex items-center space-x-4">

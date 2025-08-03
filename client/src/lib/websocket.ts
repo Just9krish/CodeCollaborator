@@ -8,14 +8,14 @@ import { ExecutionResult } from "server/code-executor";
 
 // Types
 type WsEventHandler = (message: any) => void;
-type CursorPosition = { line: number; column: number; fileId: number };
+type CursorPosition = { line: number; column: number; fileId: string };
 
 type WebSocketMessage =
-  | { type: "auth"; userId: number }
-  | { type: "join_session"; sessionId: number; cursor?: CursorPosition | null }
+  | { type: "auth"; userId: string }
+  | { type: "join_session"; sessionId: string; cursor?: CursorPosition | null }
   | { type: "leave_session" }
   | { type: "cursor_update"; cursor: CursorPosition }
-  | { type: "code_change"; fileId: number; content: string }
+  | { type: "code_change"; fileId: string; content: string }
   | { type: "chat_message"; content: string }
   | { type: "notification"; notification: any };
 
@@ -25,7 +25,7 @@ class WebSocketManager {
   private reconnectTimeout: NodeJS.Timeout | null = null;
   private user: User | null = null;
   private connected: boolean = false;
-  private sessionId: number | null = null;
+  private sessionId: string | null = null;
 
   // Initialize the WebSocket connection
   connect() {
@@ -110,7 +110,7 @@ class WebSocketManager {
   }
 
   // Join a code session
-  joinSession(sessionId: number, cursor?: CursorPosition) {
+  joinSession(sessionId: string, cursor?: CursorPosition) {
     this.sessionId = sessionId;
 
     if (this.connected) {
@@ -138,7 +138,7 @@ class WebSocketManager {
   }
 
   // Send code changes
-  sendCodeChange(fileId: number, content: string) {
+  sendCodeChange(fileId: string, content: string) {
     if (this.sessionId && this.connected) {
       this.send({ type: "code_change", fileId, content });
     }

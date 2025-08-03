@@ -39,7 +39,7 @@ export function LanguageSelector({
           <span className={`${selectedLanguage.iconColor} font-mono text-xs`}>
             {selectedLanguage.name}
           </span>
-          <i className="ri-arrow-down-s-line text-gray-400"></i>
+          <i className="ri-arrow-down-s-line text-muted-foreground"></i>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-48 p-0">
@@ -47,10 +47,11 @@ export function LanguageSelector({
           {languageOptions.map(language => (
             <button
               key={language.id}
-              className={`w-full text-left px-3 py-2 text-sm hover:bg-accent flex items-center ${language.id === currentLanguage
+              className={`w-full text-left px-3 py-2 text-sm hover:bg-accent flex items-center ${
+                language.id === currentLanguage
                   ? "bg-accent text-foreground"
                   : "text-muted-foreground"
-                }`}
+              }`}
               onClick={() => {
                 onSelect(language.id);
                 setOpen(false);

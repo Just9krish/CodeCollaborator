@@ -22,9 +22,9 @@ import { useToast } from "@/hooks/use-toast";
 
 type FileExplorerProps = {
   files: File[];
-  activeFileId: number;
-  sessionId: number;
-  onFileSelect: (fileId: number) => void;
+  activeFileId: string;
+  sessionId: string;
+  onFileSelect: (fileId: string) => void;
   onFileUpdated: () => void;
 };
 

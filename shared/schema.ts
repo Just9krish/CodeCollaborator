@@ -7,12 +7,13 @@ import {
   boolean,
   timestamp,
   jsonb,
+  uuid,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").primaryKey().defaultRandom(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   email: text("email").unique(),
@@ -29,9 +30,12 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
 export const sessions = pgTable("sessions", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").primaryKey().defaultRandom(),
+  slug: text("slug").notNull().unique(),
   name: text("name").notNull(),
-  ownerId: integer("owner_id").notNull(),
+  ownerId: uuid("owner_id")
+    .notNull()
+    .references(() => users.id),
   language: text("language").notNull().default("javascript"),
   isPublic: boolean("is_public").notNull().default(false), // Changed to private by default
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -40,6 +44,7 @@ export const sessions = pgTable("sessions", {
 
 export const insertSessionSchema = createInsertSchema(sessions).pick({
   name: true,
+  slug: true,
   ownerId: true,
   language: true,
   isPublic: true,
@@ -47,9 +52,13 @@ export const insertSessionSchema = createInsertSchema(sessions).pick({
 
 // Collaboration requests
 export const collaborationRequests = pgTable("collaboration_requests", {
-  id: serial("id").primaryKey(),
-  sessionId: integer("session_id").notNull(),
-  fromUserId: integer("from_user_id").notNull(),
+  id: uuid("id").primaryKey().defaultRandom(),
+  sessionId: uuid("session_id")
+    .notNull()
+    .references(() => sessions.id),
+  fromUserId: uuid("from_user_id")
+    .notNull()
+    .references(() => users.id),
   status: text("status").notNull().default("pending"), // pending, accepted, rejected
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
@@ -77,10 +86,12 @@ export type InsertSession = z.infer<typeof insertSessionSchema>;
 export type Session = typeof sessions.$inferSelect;
 
 export const files = pgTable("files", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
   content: text("content").notNull().default(""),
-  sessionId: integer("session_id").notNull(),
+  sessionId: uuid("session_id")
+    .notNull()
+    .references(() => sessions.id),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -95,10 +106,14 @@ export type InsertFile = z.infer<typeof insertFileSchema>;
 export type File = typeof files.$inferSelect;
 
 export const messages = pgTable("messages", {
-  id: serial("id").primaryKey(),
+  id: uuid("id").primaryKey().defaultRandom(),
   content: text("content").notNull(),
-  userId: integer("user_id").notNull(),
-  sessionId: integer("session_id").notNull(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id),
+  sessionId: uuid("session_id")
+    .notNull()
+    .references(() => sessions.id),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -141,9 +156,13 @@ export const languages = [
 ];
 
 export const sessionParticipants = pgTable("session_participants", {
-  id: serial("id").primaryKey(),
-  sessionId: integer("session_id").notNull(),
-  userId: integer("user_id").notNull(),
+  id: uuid("id").primaryKey().defaultRandom(),
+  sessionId: uuid("session_id")
+    .notNull()
+    .references(() => sessions.id),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id),
   cursor: jsonb("cursor"),
   isActive: boolean("is_active").notNull().default(true),
   joinedAt: timestamp("joined_at").notNull().defaultNow(),
@@ -165,8 +184,10 @@ export type SessionParticipant = typeof sessionParticipants.$inferSelect;
 
 // Notifications table
 export const notifications = pgTable("notifications", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(), // Recipient of the notification
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id), // Recipient of the notification
   type: text("type").notNull(), // e.g., "collaboration_request", "request_accepted", "request_rejected", "session_invite", etc.
   title: text("title").notNull(),
   message: text("message").notNull(),
@@ -187,3 +208,11 @@ export const insertNotificationSchema = createInsertSchema(notifications).pick({
 
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 export type Notification = typeof notifications.$inferSelect;
+
+// Re-export utility functions
+export {
+  generateSlug,
+  generateUniqueSlug,
+  generateId,
+  generateProjectSlug,
+} from "./utils";

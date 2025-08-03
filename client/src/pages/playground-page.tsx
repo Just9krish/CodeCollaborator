@@ -27,8 +27,8 @@ type SessionData = {
 
 // Type for combined participant data
 type EnhancedParticipant = {
-  id: number;
-  userId: number;
+  id: string;
+  userId: string;
   username: string;
   cursor: CursorPosition | null;
   isActive: boolean;
@@ -39,12 +39,12 @@ export default function PlaygroundPage() {
   const params = useParams();
   const { user } = useAuth();
   const { toast } = useToast();
-  const sessionId = params?.id ? parseInt(params.id) : null;
+  const sessionId = params?.id ? params.id : null;
 
-  const [activeFileId, setActiveFileId] = useState<number | null>(null);
+  const [activeFileId, setActiveFileId] = useState<string | null>(null);
   const [openFiles, setOpenFiles] = useState<File[]>([]);
   const [cursorPositions, setCursorPositions] = useState<
-    Map<number, CursorPosition>
+    Map<string, CursorPosition>
   >(new Map());
   const [showSidebar, setShowSidebar] = useState(true);
   const [showCollaborationPanel, setShowCollaborationPanel] = useState(true);
@@ -63,8 +63,8 @@ export default function PlaygroundPage() {
   const [accessError, setAccessError] = useState<{
     requiresAuth?: boolean;
     requiresRequest?: boolean;
-    sessionId?: number;
-    ownerId?: number;
+    sessionId?: string;
+    ownerId?: string;
     message: string;
   } | null>(null);
 
@@ -130,7 +130,7 @@ export default function PlaygroundPage() {
       fileId,
       content,
     }: {
-      fileId: number;
+      fileId: string;
       content: string;
     }) => {
       const response = await apiRequest("PATCH", `/api/files/${fileId}`, {
@@ -314,7 +314,7 @@ export default function PlaygroundPage() {
   }, [refetch]);
 
   // Handle file selection
-  const handleFileSelect = (fileId: number) => {
+  const handleFileSelect = (fileId: string) => {
     setActiveFileId(fileId);
 
     // Add to open files if not already open
@@ -327,12 +327,12 @@ export default function PlaygroundPage() {
   };
 
   // Handle file tab selection
-  const handleSelectFileTab = (fileId: number) => {
+  const handleSelectFileTab = (fileId: string) => {
     setActiveFileId(fileId);
   };
 
   // Handle file tab close
-  const handleCloseFileTab = (fileId: number) => {
+  const handleCloseFileTab = (fileId: string) => {
     // Remove from open files
     setOpenFiles(prev => prev.filter(f => f.id !== fileId));
 
@@ -623,7 +623,7 @@ export default function PlaygroundPage() {
           {/* File Explorer */}
           <FileExplorer
             files={sessionData.files}
-            activeFileId={activeFileId || 0}
+            activeFileId={activeFileId || ""}
             sessionId={sessionData.session.id}
             onFileSelect={handleFileSelect}
             onFileUpdated={() => refetch()}

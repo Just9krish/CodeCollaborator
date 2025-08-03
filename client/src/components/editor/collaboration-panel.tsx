@@ -11,9 +11,9 @@ import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 
 type CollaborationPanelProps = {
-  sessionId: number;
+  sessionId: string;
   participants: Array<{
-    userId: number;
+    userId: string;
     username: string;
     isActive: boolean;
   }>;
@@ -21,18 +21,18 @@ type CollaborationPanelProps = {
 };
 
 type CollaborationRequest = {
-  id: number;
-  sessionId: number;
-  fromUserId: number;
+  id: string;
+  sessionId: string;
+  fromUserId: string;
   status: string;
   createdAt: Date;
   username?: string;
 };
 
 type Message = {
-  id: number;
+  id: string;
   content: string;
-  userId: number;
+  userId: string;
   username: string;
   createdAt: Date;
 };
@@ -52,7 +52,7 @@ export function CollaborationPanel({
 
   // Fetch collaboration requests (only if current user is the session owner)
   const { data: sessionData } = useQuery<{
-    session: { id: number; ownerId: number };
+    session: { id: string; ownerId: string };
   }>({
     queryKey: ["/api/sessions", sessionId],
     enabled: !!user && !!sessionId,
@@ -79,7 +79,7 @@ export function CollaborationPanel({
 
   // Handle request response (accept/reject)
   const handleRequestResponse = async (
-    requestId: number,
+    requestId: string,
     status: "accepted" | "rejected"
   ) => {
     try {
