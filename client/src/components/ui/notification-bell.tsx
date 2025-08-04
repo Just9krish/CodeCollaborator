@@ -199,8 +199,8 @@ export function NotificationBell() {
       </Button>
 
       {showDropdown && (
-        <div className="absolute right-0 top-full mt-2 w-80 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-50 max-h-96 overflow-hidden">
-          <div className="p-3 border-b border-gray-700 flex items-center justify-between">
+        <div className="absolute right-0 top-full mt-2 w-80 bg-popover border border-border rounded-lg shadow-lg z-50 max-h-96 overflow-hidden">
+          <div className="p-3 border-b border-border flex items-center justify-between">
             <h3 className="text-sm font-medium text-foreground">
               Notifications
             </h3>
@@ -222,9 +222,8 @@ export function NotificationBell() {
               notifications.map((notification: Notification) => (
                 <div
                   key={notification.id}
-                  className={`p-3 border-b border-gray-700 cursor-pointer hover:bg-gray-700 transition-colors ${
-                    !notification.isRead ? "bg-gray-750" : ""
-                  }`}
+                  className={`p-3 border-b border-border cursor-pointer hover:bg-accent transition-colors ${!notification.isRead ? "bg-gray-750" : ""
+                    }`}
                   onClick={() => handleNotificationClick(notification)}
                 >
                   <div className="flex items-start space-x-3">
@@ -241,11 +240,11 @@ export function NotificationBell() {
                             {formatTimeAgo(notification.createdAt)}
                           </span>
                           {!notification.isRead && (
-                            <div className="h-2 w-2 bg-blue-500 rounded-full"></div>
+                            <div className="h-2 w-2 bg-primary rounded-full"></div>
                           )}
                         </div>
                       </div>
-                      <p className="text-sm text-gray-300 mt-1 line-clamp-2">
+                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                         {notification.message}
                       </p>
                     </div>
@@ -257,7 +256,7 @@ export function NotificationBell() {
                         deleteNotificationMutation.mutate(notification.id);
                       }}
                       disabled={deleteNotificationMutation.isPending}
-                      className="text-gray-400 hover:text-red-400 p-1 h-6 w-6"
+                      className="text-muted-foreground hover:text-red-400 p-1 h-6 w-6"
                     >
                       ×
                     </Button>
@@ -265,7 +264,7 @@ export function NotificationBell() {
                 </div>
               ))
             ) : (
-              <div className="p-6 text-center text-gray-400">
+              <div className="p-6 text-center text-muted-foreground">
                 <BellOff className="h-8 w-8 mx-auto mb-2 opacity-50" />
                 <p>No notifications yet</p>
               </div>
