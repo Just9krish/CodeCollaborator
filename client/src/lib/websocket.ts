@@ -8,16 +8,16 @@ import { ExecutionResult } from "server/code-executor";
 
 // Types
 type WsEventHandler = (message: any) => void;
-type CursorPosition = { line: number; column: number; fileId: number; };
+type CursorPosition = { line: number; column: number; fileId: string };
 
 type WebSocketMessage =
-  | { type: "auth"; userId: number; }
-  | { type: "join_session"; sessionId: number; cursor?: CursorPosition | null; }
-  | { type: "leave_session"; }
-  | { type: "cursor_update"; cursor: CursorPosition; }
-  | { type: "code_change"; fileId: number; content: string; }
-  | { type: "chat_message"; content: string; }
-  | { type: "notification"; notification: any; };
+  | { type: "auth"; userId: string }
+  | { type: "join_session"; sessionId: string; cursor?: CursorPosition | null }
+  | { type: "leave_session" }
+  | { type: "cursor_update"; cursor: CursorPosition }
+  | { type: "code_change"; fileId: string; content: string }
+  | { type: "chat_message"; content: string }
+  | { type: "notification"; notification: any };
 
 class WebSocketManager {
   private socket: WebSocket | null = null;
@@ -25,16 +25,24 @@ class WebSocketManager {
   private reconnectTimeout: NodeJS.Timeout | null = null;
   private user: User | null = null;
   private connected: boolean = false;
-  private sessionId: number | null = null;
+  private sessionId: string | null = null;
 
   // Initialize the WebSocket connection
   connect() {
     if (this.socket) return;
 
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    // Remove any token from URL and use clean WebSocket path
     const wsUrl = `${protocol}//${window.location.host}/ws`;
 
-    this.socket = new WebSocket(wsUrl);
+    console.log("Connecting to WebSocket:", wsUrl);
+
+    try {
+      this.socket = new WebSocket(wsUrl);
+    } catch (error) {
+      console.error("Failed to create WebSocket connection:", error);
+      return;
+    }
 
     this.socket.onopen = () => {
       console.log("WebSocket connected");
@@ -75,12 +83,13 @@ class WebSocketManager {
       }, 3000);
     };
 
-    this.socket.onerror = (error) => {
+    this.socket.onerror = error => {
       console.error("WebSocket error:", error);
+      console.error("WebSocket readyState:", this.socket?.readyState);
       this.trigger("error", { error });
     };
 
-    this.socket.onmessage = (event) => {
+    this.socket.onmessage = event => {
       try {
         const message = JSON.parse(event.data);
         // Trigger event handlers for this message type
@@ -110,7 +119,7 @@ class WebSocketManager {
   }
 
   // Join a code session
-  joinSession(sessionId: number, cursor?: CursorPosition) {
+  joinSession(sessionId: string, cursor?: CursorPosition) {
     this.sessionId = sessionId;
 
     if (this.connected) {
@@ -138,7 +147,7 @@ class WebSocketManager {
   }
 
   // Send code changes
-  sendCodeChange(fileId: number, content: string) {
+  sendCodeChange(fileId: string, content: string) {
     if (this.sessionId && this.connected) {
       this.send({ type: "code_change", fileId, content });
     }
@@ -173,7 +182,7 @@ class WebSocketManager {
     const handlers = this.eventHandlers.get(eventType);
 
     if (handlers) {
-      handlers.forEach((handler) => {
+      handlers.forEach(handler => {
         try {
           handler(data);
         } catch (error) {

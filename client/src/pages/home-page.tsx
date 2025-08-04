@@ -45,11 +45,11 @@ export default function HomePage() {
   const [newProjectName, setNewProjectName] = useState("");
   const [isPublic, setIsPublic] = useState(false);
   const [projectLanguage, setProjectLanguage] = useState("javascript");
-  const [newSessionId, setNewSessionId] = useState<number | null>(null);
+  const [newSessionId, setNewSessionId] = useState<string | null>(null);
   const [sharingUrl, setSharingUrl] = useState("");
   const urlInputRef = useRef<HTMLInputElement>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [sessionIdToDelete, setSessionIdToDelete] = useState<number | null>(
+  const [sessionIdToDelete, setSessionIdToDelete] = useState<string | null>(
     null
   );
 
@@ -80,7 +80,7 @@ export default function HomePage() {
 
       return await response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: data => {
       queryClient.invalidateQueries({ queryKey: ["/api/sessions"] });
 
       setNewSessionId(data.id);
@@ -94,7 +94,7 @@ export default function HomePage() {
         navigate(`/playground/${data.session.id}`);
       }
     },
-    onError: (error) => {
+    onError: error => {
       toast({
         title: "Error creating project",
         description: error.message,
@@ -104,7 +104,7 @@ export default function HomePage() {
   });
 
   const deleteSessionMutation = useMutation({
-    mutationFn: async (sessionId: number) => {
+    mutationFn: async (sessionId: string) => {
       if (!user) throw new Error("User not authenticated");
       const response = await apiRequest("DELETE", `/api/sessions/${sessionId}`);
       if (!response.ok) {
@@ -117,7 +117,7 @@ export default function HomePage() {
       setIsDeleteDialogOpen(false);
       toast({ title: "Project deleted successfully!", variant: "default" });
     },
-    onError: (error) => {
+    onError: error => {
       toast({
         title: `Error deleting project: ${error.message}`,
         variant: "destructive",
@@ -125,7 +125,7 @@ export default function HomePage() {
     },
   });
 
-  const handleDeleteSession = (sessionId: number) => {
+  const handleDeleteSession = (sessionId: string) => {
     setSessionIdToDelete(sessionId);
     setIsDeleteDialogOpen(true);
   };
@@ -196,12 +196,13 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-dark flex flex-col">
-
+    <div className="min-h-screen bg-background flex flex-col">
       <main className="flex-1 p-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold text-white">Your Projects</h1>
+            <h1 className="text-2xl font-bold text-foreground">
+              Your Projects
+            </h1>
             {/* <Button onClick={openCreateDialog}>
               <i className="ri-add-line mr-1"></i>
               New Project
@@ -213,13 +214,13 @@ export default function HomePage() {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : sessions && sessions.length === 0 ? (
-            <Card className="bg-gray-800 border-gray-700 col-span-full mt-20">
+            <Card className="border-border col-span-full mt-20">
               <CardContent className="p-8 text-center">
-                <i className="ri-inbox-line text-4xl text-gray-500 mb-4"></i>
-                <h3 className="text-xl font-medium text-white">
+                <i className="ri-inbox-line text-4xl text-muted-foreground mb-4"></i>
+                <h3 className="text-xl font-medium text-foreground">
                   No projects yet
                 </h3>
-                <p className="mt-2 text-gray-400">
+                <p className="mt-2 text-muted-foreground">
                   Create your first coding project to get started.
                 </p>
                 <div className="mt-6">
@@ -234,7 +235,7 @@ export default function HomePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Create New Project Card */}
               <Card
-                className="bg-gray-800 border-gray-700 hover:border-primary transition-colors cursor-pointer"
+                className="border-border hover:border-primary transition-colors cursor-pointer hover:bg-accent/20"
                 onClick={openCreateDialog}
               >
                 <CardContent className="flex items-center justify-center h-48">
@@ -244,10 +245,10 @@ export default function HomePage() {
                         <i className="ri-add-line text-2xl text-primary"></i>
                       </div>
                     </div>
-                    <h3 className="mt-4 text-xl font-medium text-white">
+                    <h3 className="mt-4 text-xl font-medium text-foreground">
                       Create New Project
                     </h3>
-                    <p className="mt-2 text-sm text-gray-400">
+                    <p className="mt-2 text-sm text-muted-foreground">
                       Start a fresh coding session
                     </p>
                   </div>
@@ -256,14 +257,20 @@ export default function HomePage() {
 
               {/* Existing Projects */}
               {sessions &&
-                sessions.map((session) => (
+                sessions.map(session => (
                   <Link to={`/playground/${session.id}`} key={session.id}>
-                    <Card className="bg-gray-800 border-gray-700 hover:border-primary transition-colors cursor-pointer">
+                    <Card
+                      className={`border-border hover:border-primary transition-colors cursor-pointer ${
+                        session.isPublic
+                          ? "hover:border-primary/60 hover:bg-primary/5"
+                          : "hover:border-secondary/60 hover:bg-secondary/5"
+                      }`}
+                    >
                       <CardHeader className="pb-2">
-                        <CardTitle className="text-white">
+                        <CardTitle className="text-foreground">
                           {session.name || "Untitled Project"}
                         </CardTitle>
-                        <CardDescription className="flex items-center text-gray-400">
+                        <CardDescription className="flex items-center text-muted-foreground">
                           <i
                             className={`${getLanguageIcon(
                               session.language
@@ -271,22 +278,30 @@ export default function HomePage() {
                           ></i>
                           {getLanguageName(session.language)}
                         </CardDescription>
+                        {/* Status indicator */}
+                        <div
+                          className={`w-2 h-2 rounded-full mt-2 ${
+                            session.isPublic
+                              ? "bg-primary"
+                              : "bg-secondary-foreground"
+                          }`}
+                        ></div>
                       </CardHeader>
-                      <CardContent className="text-gray-300">
+                      <CardContent className="text-muted-foreground">
                         <p className="text-sm">
                           Last edited {formatDate(session.updatedAt)}
                         </p>
                       </CardContent>
-                      <CardFooter className="pt-2 border-t border-gray-700">
+                      <CardFooter className="pt-2 border-t border-border">
                         <div className="flex items-center justify-between w-full">
-                          <div className="flex items-center text-gray-400 text-sm">
+                          <div className="flex items-center text-sm">
                             {session.isPublic ? (
-                              <div className="flex items-center">
+                              <div className="flex items-center text-primary">
                                 <Globe className="w-4 h-4 mr-1" />
                                 Public
                               </div>
                             ) : (
-                              <div className="flex items-center">
+                              <div className="flex items-center text-secondary-foreground">
                                 <Lock className="w-4 h-4 mr-1" />
                                 Private
                               </div>
@@ -295,8 +310,8 @@ export default function HomePage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
-                            onClick={(e) => {
+                            className="text-destructive hover:text-destructive/80 hover:bg-destructive/10"
+                            onClick={e => {
                               e.preventDefault(); // Prevent navigation
                               e.stopPropagation(); // Stop event bubbling
                               handleDeleteSession(session.id);
@@ -316,10 +331,12 @@ export default function HomePage() {
 
       {/* Create Project Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-gray-800 text-white border-gray-700">
+        <DialogContent className="sm:max-w-[425px] text-foreground border-border">
           <DialogHeader>
-            <DialogTitle className="text-white">Create New Project</DialogTitle>
-            <DialogDescription className="text-gray-400">
+            <DialogTitle className="text-foreground">
+              Create New Project
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
               Set up a new coding project with your preferred settings.
             </DialogDescription>
           </DialogHeader>
@@ -330,9 +347,9 @@ export default function HomePage() {
               <Input
                 id="project-name"
                 placeholder="My Awesome Project"
-                className="bg-gray-700 border-gray-600 text-white"
+                className="border-border text-foreground"
                 value={newProjectName}
-                onChange={(e) => setNewProjectName(e.target.value)}
+                onChange={e => setNewProjectName(e.target.value)}
                 autoFocus
               />
             </div>
@@ -341,17 +358,17 @@ export default function HomePage() {
               <Label htmlFor="language">Programming Language</Label>
               <Select
                 value={projectLanguage}
-                onValueChange={(value) => setProjectLanguage(value)}
+                onValueChange={value => setProjectLanguage(value)}
               >
-                <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                <SelectTrigger className="border-border text-foreground">
                   <SelectValue placeholder="Select a language" />
                 </SelectTrigger>
-                <SelectContent className="bg-gray-700 border-gray-600 text-white">
-                  {languages.map((lang) => (
+                <SelectContent className="border-border text-foreground">
+                  {languages.map(lang => (
                     <SelectItem
                       key={lang.id}
                       value={lang.id}
-                      className="text-white hover:bg-gray-600"
+                      className="text-foreground hover:bg-muted-foreground/10"
                     >
                       <div className="flex items-center">
                         <i
@@ -370,7 +387,12 @@ export default function HomePage() {
                 Project Visibility
               </Label>
               <div className="flex items-center space-x-2">
-                <Label htmlFor="public-visibility" className="text-gray-400">
+                <Label
+                  htmlFor="public-visibility"
+                  className={
+                    isPublic ? "text-primary" : "text-secondary-foreground"
+                  }
+                >
                   {isPublic ? (
                     <div className="flex items-center">
                       <Globe className="w-4 h-4 mr-1" />
@@ -392,9 +414,9 @@ export default function HomePage() {
             </div>
 
             {isPublic && (
-              <div className="p-3 bg-blue-900/20 border border-blue-900/30 rounded-md text-sm text-blue-300">
+              <div className="p-3 bg-primary/10 border border-primary/20 rounded-md text-sm text-primary">
                 <div className="flex items-start">
-                  <Globe className="w-4 h-4 mr-2 mt-0.5 text-blue-400" />
+                  <Globe className="size-5 mr-2 mt-0.5 text-primary" />
                   <div>
                     Public projects can be accessed by anyone with the link.
                     Your code will be visible to all visitors.
@@ -404,9 +426,9 @@ export default function HomePage() {
             )}
 
             {!isPublic && (
-              <div className="p-3 bg-orange-900/20 border border-orange-900/30 rounded-md text-sm text-orange-300">
+              <div className="p-3 bg-secondary/50 border border-secondary/30 rounded-md text-sm text-secondary-foreground">
                 <div className="flex items-start">
-                  <Lock className="w-4 h-4 mr-2 mt-0.5 text-orange-400" />
+                  <Lock className="size-5 mr-2 mt-0.5 text-secondary-foreground" />
                   <div>
                     Private projects require collaboration requests for others
                     to join. Only you can approve access.
@@ -420,7 +442,7 @@ export default function HomePage() {
             <Button
               variant="outline"
               onClick={() => setIsCreateDialogOpen(false)}
-              className="bg-transparent hover:bg-gray-700 text-white border-gray-600"
+              className="bg-transparent hover:bg-accent text-foreground border-border"
             >
               Cancel
             </Button>
@@ -440,10 +462,12 @@ export default function HomePage() {
 
       {/* Share URL Dialog */}
       <Dialog open={isShareDialogOpen} onOpenChange={setIsShareDialogOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-gray-800 text-white border-gray-700">
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle className="text-white">Project Created!</DialogTitle>
-            <DialogDescription className="text-gray-400">
+            <DialogTitle className="text-foreground">
+              Project Created!
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
               Your public project has been created successfully. Share this link
               with others to collaborate.
             </DialogDescription>
@@ -455,20 +479,20 @@ export default function HomePage() {
                 ref={urlInputRef}
                 readOnly
                 value={sharingUrl}
-                className="bg-gray-700 border-gray-600 text-white flex-1"
+                className="bg-muted border-border text-foreground flex-1"
               />
               <Button
                 onClick={copyToClipboard}
                 variant="outline"
-                className="bg-transparent hover:bg-gray-700 text-white border-gray-600"
+                className="bg-transparent hover:bg-accent text-foreground border-border"
               >
                 <Copy className="h-4 w-4" />
               </Button>
             </div>
 
-            <div className="p-3 bg-blue-900/20 border border-blue-900/30 rounded-md text-sm text-blue-300">
+            <div className="p-3 bg-primary/10 border border-primary/20 rounded-md text-sm text-primary-foreground">
               <div className="flex items-start">
-                <Globe className="w-4 h-4 mr-2 mt-0.5 text-blue-400" />
+                <Globe className="w-4 h-4 mr-2 mt-0.5 text-primary" />
                 <div>
                   Anyone with this link can view and participate in this coding
                   session. No approval needed.
@@ -494,10 +518,12 @@ export default function HomePage() {
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="bg-gray-800 text-white">
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Project</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-foreground">
+              Delete Project
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
               Are you sure you want to delete this project? This action cannot
               be undone.
             </DialogDescription>
@@ -533,7 +559,7 @@ function getLanguageIcon(language: string): string {
     case "ruby":
       return "ri-ruby-line text-red-500";
     default:
-      return "ri-code-line text-gray-400";
+      return "ri-code-line text-muted-foreground";
   }
 }
 

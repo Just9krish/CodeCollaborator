@@ -8,7 +8,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
@@ -23,9 +22,9 @@ import { FaPlay, FaShareNodes, FaClipboard } from "react-icons/fa6";
 import { FaSave, FaCodeBranch } from "react-icons/fa";
 
 type ActionButtonsProps = {
-  sessionId: number;
+  sessionId: string;
   sessionName: string;
-  activeFile: { id: number; content: string; name: string; };
+  activeFile: { id: string; content: string; name: string };
   language: string;
   onExecute: (result: ExecutionResult) => void;
   isRunning: boolean;
@@ -137,7 +136,7 @@ export function ActionButtons({
             <Button
               variant="ghost"
               size="sm"
-              className="flex items-center space-x-1 text-sm text-gray-300 hover:text-white px-2 py-1 rounded"
+              className="flex items-center space-x-1 text-sm text-gray-300 hover:text-foreground px-2 py-1 rounded"
               onClick={saveCode}
             >
               <FaSave />
@@ -156,7 +155,7 @@ export function ActionButtons({
             <Button
               variant="ghost"
               size="sm"
-              className="flex items-center space-x-1 text-sm text-gray-300 hover:text-white px-2 py-1 rounded"
+              className="flex items-center space-x-1 text-sm text-gray-300 hover:text-foreground px-2 py-1 rounded"
               onClick={forkProject}
             >
               <FaCodeBranch />
@@ -171,7 +170,7 @@ export function ActionButtons({
 
       <Button
         size="sm"
-        className="flex items-center space-x-1 text-sm bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded"
+        className="flex items-center space-x-1 text-sm bg-green-500 hover:bg-green-600 text-foreground px-2 py-1 rounded"
         onClick={runCode}
         disabled={isRunning}
       >
@@ -182,7 +181,7 @@ export function ActionButtons({
       <Button
         variant="secondary"
         size="sm"
-        className="flex items-center space-x-1 text-sm text-white px-2 py-1 rounded"
+        className="flex items-center space-x-1 text-sm text-foreground px-2 py-1 rounded"
         onClick={shareProject}
       >
         <FaShareNodes />
@@ -190,19 +189,15 @@ export function ActionButtons({
       </Button>
 
       <Dialog open={isSharing} onOpenChange={setIsSharing}>
-        <DialogContent className="bg-gray-800 text-white border border-gray-700">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Share Project</DialogTitle>
-            <DialogDescription className="text-gray-400">
+            <DialogDescription>
               Anyone with this link can access and collaborate on this project.
             </DialogDescription>
           </DialogHeader>
           <div className="flex items-center space-x-2">
-            <Input
-              value={shareableLink}
-              readOnly
-              className="bg-gray-900 border-gray-700 text-white"
-            />
+            <Input value={shareableLink} readOnly />
             <Button onClick={copyLink}>
               <FaClipboard />
               Copy

@@ -24,11 +24,11 @@ export default function ProfilePage() {
 
   return (
     <div className="container mx-auto py-10 px-4">
-      <h1 className="text-3xl font-bold mb-8 text-white">Profile</h1>
+      <h1 className="text-3xl font-bold mb-8 text-foreground">Profile</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-1">
-          <Card className="bg-gray-800 border-gray-700 text-white">
+          <Card className="bg-gray-800 border-gray-700 text-foreground">
             <CardHeader className="flex flex-col items-center">
               <Avatar className="h-24 w-24 border-2 border-primary/30 mb-4">
                 <AvatarFallback className="bg-primary/20 text-primary text-2xl">
@@ -68,7 +68,7 @@ export default function ProfilePage() {
         </div>
 
         <div className="md:col-span-2">
-          <Card className="bg-gray-800 border-gray-700 text-white">
+          <Card className="bg-gray-800 border-gray-700 text-foreground">
             <CardHeader>
               <CardTitle>Activity</CardTitle>
               <CardDescription className="text-gray-400">
@@ -95,7 +95,7 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-gray-800 border-gray-700 text-white mt-6">
+          <Card className="bg-gray-800 border-gray-700 text-foreground mt-6">
             <CardHeader>
               <CardTitle>Projects</CardTitle>
               <CardDescription className="text-gray-400">

@@ -39,7 +39,7 @@ export default function SettingsPage() {
 
   return (
     <div className="container mx-auto py-10 px-4">
-      <h1 className="text-3xl font-bold mb-8 text-white">Settings</h1>
+      <h1 className="text-3xl font-bold mb-8 text-foreground">Settings</h1>
 
       <Tabs defaultValue="account" className="w-full">
         <TabsList className="grid w-full max-w-md grid-cols-2 mb-8">
@@ -48,23 +48,18 @@ export default function SettingsPage() {
         </TabsList>
 
         <TabsContent value="account">
-          <Card className="bg-gray-800 border-gray-700 text-white">
+          <Card>
             <CardHeader>
               <CardTitle>Account Information</CardTitle>
-              <CardDescription className="text-gray-400">
+              <CardDescription>
                 Update your account details and password
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="username">Username</Label>
-                <Input
-                  id="username"
-                  value={user.username}
-                  disabled
-                  className="bg-gray-700 border-gray-600"
-                />
-                <p className="text-xs text-gray-400">
+                <Input id="username" value={user.username} disabled />
+                <p className="text-xs">
                   Username cannot be changed at this time
                 </p>
               </div>
@@ -75,7 +70,6 @@ export default function SettingsPage() {
                   id="current-password"
                   type="password"
                   placeholder="Enter current password"
-                  className="bg-gray-700 border-gray-600"
                 />
               </div>
 
@@ -85,7 +79,6 @@ export default function SettingsPage() {
                   id="new-password"
                   type="password"
                   placeholder="Enter new password"
-                  className="bg-gray-700 border-gray-600"
                 />
               </div>
 
@@ -95,7 +88,6 @@ export default function SettingsPage() {
                   id="confirm-password"
                   type="password"
                   placeholder="Confirm new password"
-                  className="bg-gray-700 border-gray-600"
                 />
               </div>
 
@@ -115,10 +107,10 @@ export default function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="preferences">
-          <Card className="bg-gray-800 border-gray-700 text-white">
+          <Card className="">
             <CardHeader>
               <CardTitle>Preferences</CardTitle>
-              <CardDescription className="text-gray-400">
+              <CardDescription>
                 Customize your coding environment
               </CardDescription>
             </CardHeader>
@@ -126,7 +118,7 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label htmlFor="notifications">Email Notifications</Label>
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm">
                     Receive email notifications about collaboration requests
                   </p>
                 </div>
@@ -142,7 +134,6 @@ export default function SettingsPage() {
                 <div className="grid grid-cols-2 gap-2 pt-2">
                   <Button
                     variant={theme === "dark" ? "default" : "outline"}
-                    className={theme === "dark" ? "" : "text-gray-400"}
                     onClick={() => setTheme("dark")}
                   >
                     <i className="ri-moon-line mr-2"></i>
@@ -150,7 +141,6 @@ export default function SettingsPage() {
                   </Button>
                   <Button
                     variant={theme === "light" ? "default" : "outline"}
-                    className={theme === "light" ? "" : "text-gray-400"}
                     onClick={() => setTheme("light")}
                   >
                     <i className="ri-sun-line mr-2"></i>

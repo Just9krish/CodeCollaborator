@@ -3,13 +3,28 @@ import * as monaco from "monaco-editor";
 import { Loader2 } from "lucide-react";
 import { wsManager, type CursorPosition } from "@/lib/websocket";
 
+// Configure Monaco Editor for Vite
+const configureMonaco = () => {
+  // Disable Monaco's built-in workers to avoid module resolution issues
+  self.MonacoEnvironment = {
+    getWorker: function (moduleId, label) {
+      // Return a dummy worker to avoid the moduleIdToUrl issue
+      return new Promise(() => {
+        // This prevents the error but disables language services
+      });
+    },
+  };
+};
+
 // Load the Monaco Editor assets dynamically
 const loadMonacoScripts = async () => {
-  await import("monaco-editor/esm/vs/editor/editor.all.js");
-  await import("monaco-editor/esm/vs/language/typescript/ts.worker");
-  await import("monaco-editor/esm/vs/language/json/json.worker");
-  await import("monaco-editor/esm/vs/language/css/css.worker");
-  await import("monaco-editor/esm/vs/language/html/html.worker");
+  // Configure Monaco before loading
+  configureMonaco();
+
+  // Load only basic editor functionality to avoid worker issues
+  await import("monaco-editor/esm/vs/editor/editor.api.js");
+
+  // Load basic language support without TypeScript services
   await import(
     "monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution"
   );
@@ -24,12 +39,12 @@ const loadMonacoScripts = async () => {
 type MonacoEditorProps = {
   value: string;
   language: string;
-  fileId: number;
+  fileId: string;
   readOnly?: boolean;
   onChange?: (value: string) => void;
   participants?: Array<{
-    id: number;
-    userId: number;
+    id: string;
+    userId: string;
     username: string;
     cursor: CursorPosition | null;
     color: string;
@@ -39,6 +54,7 @@ type MonacoEditorProps = {
 // Map language IDs to Monaco language IDs
 const languageMap: Record<string, string> = {
   javascript: "javascript",
+  typescript: "javascript", // Use JavaScript mode for TypeScript to avoid worker issues
   python: "python",
   java: "java",
   cpp: "cpp",
@@ -90,7 +106,8 @@ export function MonacoEditor({
 
         const monacoLanguage = languageMap[language] || "javascript";
 
-        // Create the editor
+        // Create the editor with error handling
+        // Create the editor with error handling
         const editor = monaco.editor.create(containerRef.current, {
           value,
           language: monacoLanguage,
@@ -105,6 +122,11 @@ export function MonacoEditor({
           smoothScrolling: true,
           wordWrap: "on",
           padding: { top: 10 },
+          // Disable features that might trigger worker loading
+          quickSuggestions: false,
+          parameterHints: { enabled: false },
+          suggestOnTriggerCharacters: false,
+          acceptSuggestionOnEnter: "off",
         });
 
         editorRef.current = editor;
@@ -118,7 +140,7 @@ export function MonacoEditor({
         });
 
         // Handle cursor position changes
-        editor.onDidChangeCursorPosition((e) => {
+        editor.onDidChangeCursorPosition(e => {
           if (!readOnly) {
             const cursor: CursorPosition = {
               line: e.position.lineNumber,
@@ -179,8 +201,8 @@ export function MonacoEditor({
 
     // Add cursor decorations for each participant
     const decorations = participants
-      .filter((participant) => participant.cursor?.fileId === fileId)
-      .map((participant) => {
+      .filter(participant => participant.cursor?.fileId === fileId)
+      .map(participant => {
         const { cursor, username, color } = participant;
         if (!cursor) return null;
 
@@ -206,8 +228,9 @@ export function MonacoEditor({
             glyphMarginClassName: "flex items-center justify-center",
             glyphMarginHoverMessage: { value: username },
             isWholeLine: false,
-            inlineClassName: `relative border-l-2 border-${color || generateUserColor(username)
-              }`,
+            inlineClassName: `relative border-l-2 border-${
+              color || generateUserColor(username)
+            }`,
           },
         };
       })
@@ -225,7 +248,7 @@ export function MonacoEditor({
   return (
     <div className="h-full relative">
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-10">
+        <div className="absolute inset-0 flex items-center justify-center bg-background z-10">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       )}
@@ -234,10 +257,10 @@ export function MonacoEditor({
       {/* Visual cursor indicators for participants */}
       {participants
         .filter(
-          (participant) =>
+          participant =>
             participant.cursor?.fileId === fileId && editorRef.current
         )
-        .map((participant) => (
+        .map(participant => (
           <div
             key={participant.id}
             className="absolute pointer-events-none z-20"

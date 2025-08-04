@@ -38,7 +38,7 @@ export class DBStorage implements IStorage {
   }
 
   // User operations
-  async getUser(id: number): Promise<User | undefined> {
+  async getUser(id: string): Promise<User | undefined> {
     const result = await db.select().from(users).where(eq(users.id, id));
     return result[0];
   }
@@ -57,12 +57,20 @@ export class DBStorage implements IStorage {
   }
 
   // Session operations
-  async getSession(id: number): Promise<Session | undefined> {
+  async getSession(id: string): Promise<Session | undefined> {
     const result = await db.select().from(sessions).where(eq(sessions.id, id));
     return result[0];
   }
 
-  async getSessions(ownerId?: number): Promise<Session[]> {
+  async getSessionBySlug(slug: string): Promise<Session | undefined> {
+    const result = await db
+      .select()
+      .from(sessions)
+      .where(eq(sessions.slug, slug));
+    return result[0];
+  }
+
+  async getSessions(ownerId?: string): Promise<Session[]> {
     if (ownerId) {
       return await db
         .select()
@@ -78,7 +86,7 @@ export class DBStorage implements IStorage {
   }
 
   async updateSession(
-    id: number,
+    id: string,
     sessionData: Partial<InsertSession>
   ): Promise<Session | undefined> {
     const result = await db
@@ -89,7 +97,7 @@ export class DBStorage implements IStorage {
     return result[0];
   }
 
-  async deleteSession(id: number): Promise<boolean> {
+  async deleteSession(id: string): Promise<boolean> {
     // Delete all related data in order due to foreign key constraints
     await db.delete(messages).where(eq(messages.sessionId, id));
     await db
@@ -104,12 +112,12 @@ export class DBStorage implements IStorage {
   }
 
   // File operations
-  async getFile(id: number): Promise<File | undefined> {
+  async getFile(id: string): Promise<File | undefined> {
     const result = await db.select().from(files).where(eq(files.id, id));
     return result[0];
   }
 
-  async getFilesBySession(sessionId: number): Promise<File[]> {
+  async getFilesBySession(sessionId: string): Promise<File[]> {
     return await db.select().from(files).where(eq(files.sessionId, sessionId));
   }
 
@@ -119,7 +127,7 @@ export class DBStorage implements IStorage {
   }
 
   async updateFile(
-    id: number,
+    id: string,
     fileData: Partial<InsertFile>
   ): Promise<File | undefined> {
     const result = await db
@@ -130,13 +138,13 @@ export class DBStorage implements IStorage {
     return result[0];
   }
 
-  async deleteFile(id: number): Promise<boolean> {
+  async deleteFile(id: string): Promise<boolean> {
     const result = await db.delete(files).where(eq(files.id, id));
     return !!result;
   }
 
   // Message operations
-  async getMessagesBySession(sessionId: number): Promise<Message[]> {
+  async getMessagesBySession(sessionId: string): Promise<Message[]> {
     return await db
       .select()
       .from(messages)
@@ -151,7 +159,7 @@ export class DBStorage implements IStorage {
 
   // Participant operations
   async getSessionParticipants(
-    sessionId: number,
+    sessionId: string,
     activeOnly: boolean = false
   ): Promise<SessionParticipant[]> {
     const filters = [eq(sessionParticipants.sessionId, sessionId)];
@@ -173,9 +181,9 @@ export class DBStorage implements IStorage {
 
   // Get session participants with user information
   async getSessionParticipantsWithUsers(
-    sessionId: number,
+    sessionId: string,
     activeOnly: boolean = false
-  ): Promise<(SessionParticipant & { username: string; })[]> {
+  ): Promise<(SessionParticipant & { username: string })[]> {
     const filters = [eq(sessionParticipants.sessionId, sessionId)];
 
     if (activeOnly) {
@@ -211,7 +219,7 @@ export class DBStorage implements IStorage {
   }
 
   async updateParticipant(
-    id: number,
+    id: string,
     participantData: Partial<InsertSessionParticipant>
   ): Promise<SessionParticipant | undefined> {
     const result = await db
@@ -222,7 +230,7 @@ export class DBStorage implements IStorage {
     return result[0];
   }
 
-  async removeParticipant(sessionId: number, userId: number): Promise<boolean> {
+  async removeParticipant(sessionId: string, userId: string): Promise<boolean> {
     const result = await db
       .update(sessionParticipants)
       .set({ isActive: false })
@@ -242,7 +250,7 @@ export class DBStorage implements IStorage {
 
   // Collaboration request operations
   async getCollaborationRequest(
-    id: number
+    id: string
   ): Promise<CollaborationRequest | undefined> {
     const result = await db
       .select()
@@ -252,7 +260,7 @@ export class DBStorage implements IStorage {
   }
 
   async getCollaborationRequestsByUser(
-    userId: number
+    userId: string
   ): Promise<CollaborationRequest[]> {
     return await db
       .select()
@@ -262,24 +270,16 @@ export class DBStorage implements IStorage {
   }
 
   async getCollaborationRequestsBySession(
-    sessionId: number,
-    status?: string
+    sessionId: string
   ): Promise<CollaborationRequest[]> {
-    const filters = [eq(collaborationRequests.sessionId, sessionId)];
-
-    // Only add status filter if status is provided
-    if (status) {
-      filters.push(eq(collaborationRequests.status, status));
-    }
-
     return await db
       .select()
       .from(collaborationRequests)
-      .where(and(...filters))
+      .where(eq(collaborationRequests.sessionId, sessionId))
       .orderBy(collaborationRequests.createdAt);
   }
 
-  async getCollaborationRequestByUser(userId: number, sessionId: number) {
+  async getCollaborationRequestByUser(userId: string, sessionId: string) {
     return await db
       .select()
       .from(collaborationRequests)
@@ -293,8 +293,8 @@ export class DBStorage implements IStorage {
   }
 
   async createCollaborationRequest(request: {
-    sessionId: number;
-    fromUserId: number;
+    sessionId: string;
+    fromUserId: string;
     status?: string;
   }): Promise<CollaborationRequest> {
     const result = await db
@@ -309,8 +309,8 @@ export class DBStorage implements IStorage {
   }
 
   async updateCollaborationRequest(
-    id: number,
-    requestData: Partial<{ status: string; }>
+    id: string,
+    requestData: Partial<{ status: string }>
   ): Promise<CollaborationRequest | undefined> {
     const result = await db
       .update(collaborationRequests)
@@ -321,56 +321,75 @@ export class DBStorage implements IStorage {
   }
 
   // Notification operations
-  async getNotifications(userId: number, unreadOnly: boolean = false): Promise<Notification[]> {
-    const filters = [eq(notifications.userId, userId)];
-
-    if (unreadOnly) {
-      filters.push(eq(notifications.isRead, false));
-    }
-
+  async getNotifications(userId: string): Promise<Notification[]> {
     return await db
       .select()
       .from(notifications)
-      .where(and(...filters))
+      .where(eq(notifications.userId, userId))
       .orderBy(notifications.createdAt);
   }
 
-  async getNotification(id: number): Promise<Notification | undefined> {
-    const result = await db.select().from(notifications).where(eq(notifications.id, id));
+  async createNotification(
+    notification: InsertNotification
+  ): Promise<Notification> {
+    const result = await db
+      .insert(notifications)
+      .values(notification)
+      .returning();
     return result[0];
   }
 
-  async createNotification(notification: InsertNotification): Promise<Notification> {
-    const result = await db.insert(notifications).values(notification).returning();
-    return result[0];
-  }
-
-  async markNotificationAsRead(id: number): Promise<Notification | undefined> {
+  async updateNotification(
+    id: string,
+    notificationData: Partial<InsertNotification>
+  ): Promise<Notification | undefined> {
     const result = await db
       .update(notifications)
-      .set({ isRead: true })
+      .set(notificationData)
       .where(eq(notifications.id, id))
       .returning();
     return result[0];
   }
 
-  async markAllNotificationsAsRead(userId: number): Promise<void> {
-    await db
+  async markNotificationAsRead(id: string): Promise<boolean> {
+    const result = await db
       .update(notifications)
       .set({ isRead: true })
-      .where(eq(notifications.userId, userId));
-  }
-
-  async deleteNotification(id: number): Promise<boolean> {
-    const result = await db.delete(notifications).where(eq(notifications.id, id));
+      .where(eq(notifications.id, id));
     return !!result;
   }
 
-  async getUnreadNotificationCount(userId: number): Promise<number> {
+  async markAllNotificationsAsRead(userId: string): Promise<boolean> {
+    const result = await db
+      .update(notifications)
+      .set({ isRead: true })
+      .where(eq(notifications.userId, userId));
+    return !!result;
+  }
+
+  // Additional helper methods (not in interface but useful)
+  async getNotification(id: string): Promise<Notification | undefined> {
+    const result = await db
+      .select()
+      .from(notifications)
+      .where(eq(notifications.id, id));
+    return result[0];
+  }
+
+  async deleteNotification(id: string): Promise<boolean> {
+    const result = await db
+      .delete(notifications)
+      .where(eq(notifications.id, id));
+    return !!result;
+  }
+
+  async getUnreadNotificationCount(userId: string): Promise<number> {
     const result = await db
       .select({ count: sql`count(*)` })
       .from(notifications)
-      .where(and(eq(notifications.userId, userId), eq(notifications.isRead, false)));
+      .where(
+        and(eq(notifications.userId, userId), eq(notifications.isRead, false))
+      );
     return Number(result[0]?.count || 0);
   }
 }

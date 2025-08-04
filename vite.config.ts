@@ -16,8 +16,8 @@ export default defineConfig({
     ...(process.env.NODE_ENV !== "production" &&
     process.env.REPL_ID !== undefined
       ? [
-          await import("@replit/vite-plugin-cartographer").then((m) =>
-            m.cartographer(),
+          await import("@replit/vite-plugin-cartographer").then(m =>
+            m.cartographer()
           ),
         ]
       : []),
@@ -32,5 +32,12 @@ export default defineConfig({
   build: {
     outDir: path.resolve(__dirname, "dist/public"),
     emptyOutDir: true,
+  },
+  optimizeDeps: {
+    include: ["monaco-editor"],
+  },
+  define: {
+    // Fix Monaco Editor module resolution issues
+    "process.env.NODE_ENV": JSON.stringify(process.env.NODE_ENV),
   },
 });

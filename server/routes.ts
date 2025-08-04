@@ -17,8 +17,8 @@ import {
 // Type for WebSocket clients with session information
 type ClientConnection = {
   ws: WebSocket;
-  userId: number;
-  sessionId: number | null;
+  userId: string;
+  sessionId: string | null;
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -31,21 +31,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create WebSocket server for real-time collaboration
   const wss = new WebSocketServer({ server: httpServer, path: "/ws" });
 
+  // Log WebSocket server setup
+  console.log("WebSocket server created on path: /ws");
+
   // Track client connections
   const clients = new Set<ClientConnection>();
 
   // Handle WebSocket connections
-  wss.on("connection", (ws) => {
+  wss.on("connection", ws => {
+    console.log("WebSocket client connected");
+
     const client: ClientConnection = {
       ws,
-      userId: -1, // Will be set when user joins session
+      userId: "", // Will be set when user joins session
       sessionId: null,
     };
 
     clients.add(client);
     notificationService.registerClient(client);
 
-    ws.on("message", async (rawMessage) => {
+    // Handle WebSocket errors
+    ws.on("error", error => {
+      console.error("WebSocket client error:", error);
+    });
+
+    ws.on("close", () => {
+      console.log("WebSocket client disconnected");
+      clients.delete(client);
+    });
+
+    ws.on("message", async rawMessage => {
       try {
         const message = JSON.parse(rawMessage.toString());
 
@@ -69,7 +84,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Check if user has access to session
             if (
               !session.isPublic &&
-              client.userId > 0 &&
+              client.userId !== "" &&
               session.ownerId !== client.userId
             ) {
               // Check if user is a participant
@@ -77,7 +92,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 message.sessionId
               );
               const isParticipant = participants.some(
-                (p) => p.userId === client.userId
+                p => p.userId === client.userId
               );
 
               if (!isParticipant) {
@@ -86,7 +101,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   client.userId
                 );
                 const hasAccess = requests.some(
-                  (r) =>
+                  r =>
                     r.sessionId === message.sessionId && r.status === "accepted"
                 );
 
@@ -106,13 +121,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // User has access, join the session
             client.sessionId = message.sessionId;
 
-            if (client.userId > 0) {
+            if (client.userId !== "") {
               // Check if user is already a participant
               const participants = await storage.getSessionParticipants(
                 message.sessionId
               );
               const existingParticipant = participants.find(
-                (p) => p.userId === client.userId
+                p => p.userId === client.userId
               );
 
               if (existingParticipant) {
@@ -143,7 +158,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             break;
 
           case "leave_session":
-            if (client.sessionId && client.userId > 0) {
+            if (client.sessionId && client.userId !== "") {
               await storage.removeParticipant(client.sessionId, client.userId);
 
               // Notify other clients
@@ -160,13 +175,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             break;
 
           case "cursor_update":
-            if (client.sessionId && client.userId > 0) {
+            if (client.sessionId && client.userId !== "") {
               // Find the participant and update cursor
-              const participants = await storage.getSessionParticipantsWithUsers(
-                client.sessionId
-              );
+              const participants =
+                await storage.getSessionParticipantsWithUsers(client.sessionId);
               const participant = participants.find(
-                (p) => p.userId === client.userId
+                p => p.userId === client.userId
               );
 
               if (participant) {
@@ -211,7 +225,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             break;
 
           case "chat_message":
-            if (client.sessionId && client.userId > 0) {
+            if (client.sessionId && client.userId !== "") {
               // Store message
               const newMessage = await storage.createMessage({
                 content: message.content,
@@ -248,7 +262,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     // Handle disconnection
     ws.on("close", async () => {
-      if (client.sessionId && client.userId > 0) {
+      if (client.sessionId && client.userId !== "") {
         // Mark the user as inactive in the session
         await storage.removeParticipant(client.sessionId, client.userId);
 
@@ -266,8 +280,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  function broadcastToUser(userId: number, message: any) {
-    clients.forEach((client) => {
+  function broadcastToUser(userId: string, message: any) {
+    clients.forEach(client => {
       if (client.userId === userId && client.ws.readyState === WebSocket.OPEN) {
         client.ws.send(JSON.stringify(message));
       }
@@ -276,11 +290,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Helper function to broadcast messages to all clients in a session
   function broadcastToSession(
-    sessionId: number,
+    sessionId: string,
     message: any,
     excludeClient?: ClientConnection
   ) {
-    clients.forEach((client) => {
+    clients.forEach(client => {
       if (
         client.sessionId === sessionId &&
         client.ws.readyState === WebSocket.OPEN &&
@@ -342,7 +356,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/sessions/:id", async (req, res) => {
     try {
-      const sessionId = parseInt(req.params.id);
+      const sessionId = req.params.id;
       const session = await storage.getSession(sessionId);
 
       if (!session) {
@@ -366,7 +380,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Check if user is a participant
           const participants = await storage.getSessionParticipants(sessionId);
           const isParticipant = participants.some(
-            (p) => p.userId === req.user!.id
+            p => p.userId === req.user!.id
           );
 
           if (!isParticipant) {
@@ -375,7 +389,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               req.user!.id
             );
             const hasAccess = requests.some(
-              (r) => r.sessionId === sessionId && r.status === "accepted"
+              r => r.sessionId === sessionId && r.status === "accepted"
             );
 
             if (!hasAccess) {
@@ -392,7 +406,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // User has access, retrieve session data
       const files = await storage.getFilesBySession(sessionId);
-      const participants = await storage.getSessionParticipantsWithUsers(sessionId, false);
+      const participants = await storage.getSessionParticipantsWithUsers(
+        sessionId,
+        false
+      );
 
       return res.status(200).json({ session, files, participants });
     } catch (error) {
@@ -406,7 +423,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(401).json({ message: "Unauthorized" });
 
     try {
-      const sessionId = parseInt(req.params.id);
+      const sessionId = req.params.id;
       const session = await storage.getSession(sessionId);
 
       if (!session) {
@@ -432,7 +449,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(401).json({ message: "Unauthorized" });
 
     try {
-      const sessionId = parseInt(req.params.id);
+      const sessionId = req.params.id;
       const session = await storage.getSession(sessionId);
 
       if (!session) {
@@ -466,7 +483,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(401).json({ message: "Unauthorized" });
 
     try {
-      const sessionId = parseInt(req.params.sessionId);
+      const sessionId = req.params.sessionId;
       const session = await storage.getSession(sessionId);
 
       if (!session) {
@@ -502,7 +519,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(401).json({ message: "Unauthorized" });
 
     try {
-      const fileId = parseInt(req.params.id);
+      const fileId = req.params.id;
       const file = await storage.getFile(fileId);
 
       if (!file) {
@@ -531,7 +548,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(401).json({ message: "Unauthorized" });
 
     try {
-      const fileId = parseInt(req.params.id);
+      const fileId = req.params.id;
       const file = await storage.getFile(fileId);
 
       if (!file) {
@@ -561,7 +578,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Messages
   app.get("/api/sessions/:sessionId/messages", async (req, res) => {
     try {
-      const sessionId = parseInt(req.params.sessionId);
+      const sessionId = req.params.sessionId;
       const messages = await storage.getMessagesBySession(sessionId);
       return res.status(200).json(messages);
     } catch (error) {
@@ -581,7 +598,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .json({ message: "Code and language are required" });
       }
 
-      const supportedLanguage = languages.find((lang) => lang.id === language);
+      const supportedLanguage = languages.find(lang => lang.id === language);
       if (!supportedLanguage) {
         return res.status(400).json({ message: "Unsupported language" });
       }
@@ -607,7 +624,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Unauthorized" });
 
       try {
-        const sessionId = parseInt(req.params.sessionId);
+        const sessionId = req.params.sessionId;
         const session = await storage.getSession(sessionId);
 
         if (!session) {
@@ -626,7 +643,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           req.user!.id
         );
         const existingRequest = existingRequests.find(
-          (r) => r.sessionId === sessionId && r.status === "pending"
+          r => r.sessionId === sessionId && r.status === "pending"
         );
 
         if (existingRequest) {
@@ -668,7 +685,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       try {
-        const sessionId = parseInt(req.params.sessionId);
+        const sessionId = req.params.sessionId;
         const session = await storage.getSession(sessionId);
         const status = req.query.status as string;
 
@@ -682,13 +699,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         const requests = await storage.getCollaborationRequestsBySession(
-          sessionId,
-          status
+          sessionId
+          // status
         );
 
         // Add username to each request
         const requestsWithUsernames = await Promise.all(
-          requests.map(async (request) => {
+          requests.map(async request => {
             const requester = await storage.getUser(request.fromUserId);
             return {
               ...request,
@@ -712,7 +729,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(401).json({ message: "Unauthorized" });
 
     try {
-      const requestId = parseInt(req.params.id);
+      const requestId = req.params.id;
       const request = await storage.getCollaborationRequest(requestId);
 
       if (!request) {
@@ -747,7 +764,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (status === "accepted") {
         const participants = await storage.getSessionParticipants(session.id);
         const existingParticipant = participants.find(
-          (p) => p.userId === request.fromUserId
+          p => p.userId === request.fromUserId
         );
 
         if (!existingParticipant) {
@@ -786,7 +803,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const unreadOnly = req.query.unread === "true";
-      const notifications = await storage.getNotifications(req.user!.id, unreadOnly);
+      const notifications = await storage.getNotifications(
+        req.user!.id
+        // unreadOnly
+      );
       return res.status(200).json(notifications);
     } catch (error) {
       console.error("Error fetching notifications:", error);
@@ -814,7 +834,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const notificationId = parseInt(req.params.id);
+      const notificationId = req.params.id;
       const notification = await storage.getNotification(notificationId);
 
       if (!notification) {
@@ -822,14 +842,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (notification.userId !== req.user!.id) {
-        return res.status(403).json({ message: "Not authorized to update this notification" });
+        return res
+          .status(403)
+          .json({ message: "Not authorized to update this notification" });
       }
 
-      const updatedNotification = await storage.markNotificationAsRead(notificationId);
+      const updatedNotification =
+        await storage.markNotificationAsRead(notificationId);
       return res.status(200).json(updatedNotification);
     } catch (error) {
       console.error("Error marking notification as read:", error);
-      return res.status(500).json({ message: "Failed to mark notification as read" });
+      return res
+        .status(500)
+        .json({ message: "Failed to mark notification as read" });
     }
   });
 
@@ -840,10 +865,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       await storage.markAllNotificationsAsRead(req.user!.id);
-      return res.status(200).json({ message: "All notifications marked as read" });
+      return res
+        .status(200)
+        .json({ message: "All notifications marked as read" });
     } catch (error) {
       console.error("Error marking all notifications as read:", error);
-      return res.status(500).json({ message: "Failed to mark all notifications as read" });
+      return res
+        .status(500)
+        .json({ message: "Failed to mark all notifications as read" });
     }
   });
 
@@ -853,7 +882,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const notificationId = parseInt(req.params.id);
+      const notificationId = req.params.id;
       const notification = await storage.getNotification(notificationId);
 
       if (!notification) {
@@ -861,14 +890,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (notification.userId !== req.user!.id) {
-        return res.status(403).json({ message: "Not authorized to delete this notification" });
+        return res
+          .status(403)
+          .json({ message: "Not authorized to delete this notification" });
       }
 
       const success = await storage.deleteNotification(notificationId);
       if (success) {
         return res.status(200).json({ message: "Notification deleted" });
       } else {
-        return res.status(500).json({ message: "Failed to delete notification" });
+        return res
+          .status(500)
+          .json({ message: "Failed to delete notification" });
       }
     } catch (error) {
       console.error("Error deleting notification:", error);

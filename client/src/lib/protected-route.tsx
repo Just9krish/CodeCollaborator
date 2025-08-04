@@ -1,6 +1,6 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
-import { Redirect, Route, } from "wouter";
+import { Redirect, Route } from "wouter";
 
 export function ProtectedRoute({
   path,
@@ -26,7 +26,7 @@ export function ProtectedRoute({
     localStorage.setItem("redirectAfterLogin", path);
     return (
       <Route path={path}>
-        <Redirect to="/auth" />
+        <Redirect to="/login" />
       </Route>
     );
   }
