@@ -25,6 +25,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
 import { features } from "@shared/constant";
+import {
+  getRedirectPath,
+  clearRedirectParam,
+  hasRedirectParam,
+} from "@/lib/utils";
 
 // Extend the insert schema with validation rules
 const registerSchema = insertUserSchema
@@ -41,41 +46,16 @@ const registerSchema = insertUserSchema
 
 export default function SignupPage() {
   const { user, registerMutation } = useAuth();
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
 
-  // Check for redirect after login
-  const [redirectPath, setRedirectPath] = useState<string | null>(null);
-
-  // Get redirect path from localStorage on component mount
+  // Handle redirect after successful registration
   useEffect(() => {
     if (user) {
-      const savedRedirect = localStorage.getItem("redirectAfterLogin");
-
-      // Clear stored redirect path after using it
-      localStorage.removeItem("redirectAfterLogin");
-
-      if (savedRedirect) {
-        navigate(savedRedirect);
-      } else {
-        navigate("/");
-      }
+      const redirectPath = getRedirectPath();
+      clearRedirectParam();
+      navigate(redirectPath);
     }
   }, [user, navigate]);
-
-  // Redirect if already logged in
-  useEffect(() => {
-    if (user) {
-      // Clear the localStorage item
-      localStorage.removeItem("redirectAfterLogin");
-
-      // Redirect to the saved path or fallback to home
-      if (redirectPath) {
-        navigate(redirectPath);
-      } else {
-        navigate("/");
-      }
-    }
-  }, [user, navigate, redirectPath]);
 
   // Registration form
   const registerForm = useForm<z.infer<typeof registerSchema>>({
@@ -145,6 +125,11 @@ export default function SignupPage() {
             </CardTitle>
             <CardDescription>
               Join CodeCollab to start collaborating
+              {hasRedirectParam() && (
+                <div className="mt-2 text-sm text-blue-600">
+                  You'll be redirected after registration
+                </div>
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent>

@@ -1,6 +1,7 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
-import { Redirect, Route } from "wouter";
+import { Redirect, Route, useLocation } from "wouter";
+import { createLoginUrl } from "./utils";
 
 export function ProtectedRoute({
   path,
@@ -10,11 +11,12 @@ export function ProtectedRoute({
   component: () => React.JSX.Element;
 }) {
   const { user, isLoading } = useAuth();
+  const [location] = useLocation();
 
   if (isLoading) {
     return (
       <Route path={path}>
-        <div className="flex items-center justify-center min-h-screen bg-gray-900">
+        <div className="flex items-center justify-center min-h-screen bg-background">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       </Route>
@@ -22,11 +24,11 @@ export function ProtectedRoute({
   }
 
   if (!user) {
-    // Store the intended path before redirecting
-    localStorage.setItem("redirectAfterLogin", path);
+    // Store the actual current path in query parameter before redirecting
+    const redirectUrl = createLoginUrl(location);
     return (
       <Route path={path}>
-        <Redirect to="/login" />
+        <Redirect to={redirectUrl} />
       </Route>
     );
   }

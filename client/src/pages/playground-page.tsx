@@ -17,6 +17,7 @@ import { Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { createLoginUrl } from "@/lib/utils";
 
 // Type definitions for session data
 type SessionData = {
@@ -496,12 +497,9 @@ export default function PlaygroundPage() {
         <div className="space-y-4">
           <Button
             onClick={() => {
-              // Save current URL to localStorage to redirect back after login
-              localStorage.setItem(
-                "redirectAfterLogin",
-                window.location.pathname
-              );
-              window.location.href = "/login";
+              // Save current URL to query parameter to redirect back after login
+              const redirectUrl = createLoginUrl(window.location.pathname);
+              window.location.href = redirectUrl;
             }}
           >
             Log In
