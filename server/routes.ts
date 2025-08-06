@@ -514,6 +514,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Folders
+  app.post("/api/sessions/:sessionId/folders", async (req, res) => {
+    if (!req.isAuthenticated())
+      return res.status(401).json({ message: "Unauthorized" });
+
+    try {
+      const sessionId = req.params.sessionId;
+      const session = await storage.getSession(sessionId);
+
+      if (!session) {
+        return res.status(404).json({ message: "Session not found" });
+      }
+
+      const { name, parentId } = req.body;
+
+      if (!name) {
+        return res.status(400).json({ message: "Folder name is required" });
+      }
+
+      const folder = await storage.createFolder({
+        name,
+        sessionId,
+        parentId: parentId || undefined,
+      });
+
+      // Notify clients about new folder
+      broadcastToSession(sessionId, {
+        type: "folder_created",
+        folder,
+      });
+
+      return res.status(201).json(folder);
+    } catch (error) {
+      console.error("Error creating folder:", error);
+      return res.status(500).json({ message: "Failed to create folder" });
+    }
+  });
+
   app.patch("/api/files/:id", async (req, res) => {
     if (!req.isAuthenticated())
       return res.status(401).json({ message: "Unauthorized" });

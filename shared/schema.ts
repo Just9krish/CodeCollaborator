@@ -2,8 +2,6 @@ import { InferInsertModel, InferSelectModel } from "drizzle-orm";
 import {
   pgTable,
   text,
-  serial,
-  integer,
   boolean,
   timestamp,
   jsonb,
@@ -87,6 +85,8 @@ export const files = pgTable("files", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
   content: text("content").notNull().default(""),
+  isFolder: boolean("is_folder").notNull().default(false),
+  parentId: uuid("parent_id"), // Self-reference for nesting - will be constrained later
   sessionId: uuid("session_id")
     .notNull()
     .references(() => sessions.id),
@@ -97,6 +97,8 @@ export const files = pgTable("files", {
 export const insertFileSchema = createInsertSchema(files).pick({
   name: true,
   content: true,
+  isFolder: true,
+  parentId: true,
   sessionId: true,
 });
 

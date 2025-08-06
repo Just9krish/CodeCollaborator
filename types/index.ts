@@ -23,7 +23,6 @@ export interface IStorage {
 
   // Session operations
   getSession(id: string): Promise<Session | undefined>;
-  getSessionBySlug(slug: string): Promise<Session | undefined>;
   getSessions(ownerId?: string): Promise<Session[]>;
   createSession(session: InsertSession): Promise<Session>;
   updateSession(

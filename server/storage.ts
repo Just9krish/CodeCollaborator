@@ -62,14 +62,6 @@ export class DBStorage implements IStorage {
     return result[0];
   }
 
-  async getSessionBySlug(slug: string): Promise<Session | undefined> {
-    const result = await db
-      .select()
-      .from(sessions)
-      .where(eq(sessions.slug, slug));
-    return result[0];
-  }
-
   async getSessions(ownerId?: string): Promise<Session[]> {
     if (ownerId) {
       return await db
@@ -123,6 +115,22 @@ export class DBStorage implements IStorage {
 
   async createFile(file: InsertFile): Promise<File> {
     const result = await db.insert(files).values(file).returning();
+    return result[0];
+  }
+
+  async createFolder(folderData: {
+    name: string;
+    sessionId: string;
+    parentId?: string;
+  }): Promise<File> {
+    const result = await db
+      .insert(files)
+      .values({
+        ...folderData,
+        content: "",
+        isFolder: true,
+      })
+      .returning();
     return result[0];
   }
 

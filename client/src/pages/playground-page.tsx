@@ -268,6 +268,10 @@ export default function PlaygroundPage() {
       onParticipantsUpdate
     );
     const unsubscribeFileCreated = wsManager.on("file_created", onFileCreated);
+    const unsubscribeFolderCreated = wsManager.on(
+      "folder_created",
+      onFileCreated
+    ); // Treat folder as file for now
     const unsubscribeFileUpdated = wsManager.on("file_updated", onFileUpdated);
     const unsubscribeFileDeleted = wsManager.on("file_deleted", onFileDeleted);
 
@@ -276,6 +280,7 @@ export default function PlaygroundPage() {
       unsubscribeCursorUpdate();
       unsubscribeParticipantsUpdate();
       unsubscribeFileCreated();
+      unsubscribeFolderCreated();
       unsubscribeFileUpdated();
       unsubscribeFileDeleted();
     };
@@ -572,7 +577,7 @@ export default function PlaygroundPage() {
   const activeFile = openFiles.find(f => f.id === activeFileId) || openFiles[0];
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-svh flex flex-col bg-background">
       {/* Session Controls */}
       <SessionControls
         sessionId={sessionData.session.id}
@@ -592,32 +597,6 @@ export default function PlaygroundPage() {
             showSidebar ? "block" : "hidden"
           } md:block`}
         >
-          {/* Sidebar header */}
-          <div className="flex items-center justify-between px-2 py-2 border-b border-border">
-            <h3 className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
-              Files
-            </h3>
-            <div className="flex space-x-1">
-              <button
-                className="p-1 text-muted-foreground hover:text-foreground rounded hover:bg-accent text-xs"
-                onClick={() => {
-                  // Open the create file dialog in FileExplorer component
-                  document.getElementById("create-file-button")?.click();
-                }}
-              >
-                <i className="ri-add-line"></i>
-              </button>
-              <button
-                className="p-1 text-muted-foreground hover:text-foreground rounded hover:bg-accent text-xs"
-                onClick={() => {
-                  document.getElementById("upload-file-input")?.click();
-                }}
-              >
-                <i className="ri-upload-2-line"></i>
-              </button>
-            </div>
-          </div>
-
           {/* File Explorer */}
           <FileExplorer
             files={sessionData.files}

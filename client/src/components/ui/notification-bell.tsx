@@ -222,8 +222,9 @@ export function NotificationBell() {
               notifications.map((notification: Notification) => (
                 <div
                   key={notification.id}
-                  className={`p-3 border-b border-border cursor-pointer hover:bg-accent transition-colors ${!notification.isRead ? "bg-gray-750" : ""
-                    }`}
+                  className={`p-3 border-b border-border cursor-pointer hover:bg-accent transition-colors ${
+                    !notification.isRead ? "bg-gray-750" : ""
+                  }`}
                   onClick={() => handleNotificationClick(notification)}
                 >
                   <div className="flex items-start space-x-3">
