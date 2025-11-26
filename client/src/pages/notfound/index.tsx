@@ -22,7 +22,7 @@ export default function NotFound() {
               Oops! Page Not Found
             </h1>
             <p className="text-muted-foreground text-lg">
-              Looks like this page took a coding break! 🚀
+              Looks like this page took a coding break!
             </p>
           </div>
 
@@ -39,7 +39,7 @@ export default function NotFound() {
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   The page you're looking for might have been moved, deleted, or
                   you typed the wrong URL. Don't worry, even the best developers
-                  get 404s sometimes! 💻✨
+                  get 404s sometimes!
                 </p>
               </div>
             </div>
