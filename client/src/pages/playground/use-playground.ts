@@ -12,7 +12,7 @@ import {
 import { generateUserColor } from "@/lib/language-utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { queryKeys } from "@/lib/query-keys";
-import type { File, Session, SessionParticipant } from "@shared/schema";
+import type { File } from "@shared/schema";
 
 export interface EnhancedParticipant {
   id: string;
@@ -64,6 +64,30 @@ export function usePlayground() {
     refetch,
   } = useSession(sessionId);
 
+  // Map API error flags (requiresAuth / requiresRequest) into accessError
+  useEffect(() => {
+    if (!error) {
+      setAccessError(null);
+      return;
+    }
+
+    const err = error as any;
+
+    if (err.requiresAuth || err.requiresRequest) {
+      setAccessError({
+        requiresAuth: err.requiresAuth,
+        requiresRequest: err.requiresRequest,
+        sessionId: err.sessionId,
+        ownerId: err.ownerId,
+        message: err.message,
+      });
+      return;
+    }
+
+    // For other errors, leave accessError null so generic ErrorView is used
+    setAccessError(null);
+  }, [error]);
+
   // Mutations
   const createCollaborationRequest = useCreateCollaborationRequest();
 
@@ -79,6 +103,43 @@ export function usePlayground() {
       }
     };
   }, [user, sessionId]);
+
+  // Listen for collaboration request approval notifications
+  useEffect(() => {
+    if (!user || !sessionId) return;
+
+    // Listen for collaboration request approval notifications
+    const unsubscribeNotification = wsManager.on(
+      "notification",
+      (data: any) => {
+        const notification = data.notification;
+        if (
+          notification?.type === "request_accepted" &&
+          notification?.data?.sessionId === sessionId
+        ) {
+          // Request was accepted - refetch session data to get access
+          refetch();
+          setAccessError(null); // Clear access error
+        }
+      }
+    );
+
+    // Also listen for direct collaboration_request_approved event
+    const unsubscribeApproved = wsManager.on(
+      "collaboration_request_approved",
+      (data: any) => {
+        if (data.session?.id === sessionId) {
+          refetch();
+          setAccessError(null);
+        }
+      }
+    );
+
+    return () => {
+      unsubscribeNotification();
+      unsubscribeApproved();
+    };
+  }, [user, sessionId, refetch]);
 
   // Join session when data is available
   useEffect(() => {

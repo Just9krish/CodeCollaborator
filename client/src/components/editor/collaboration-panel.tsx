@@ -61,21 +61,64 @@ export function CollaborationPanel({
   const isSessionOwner = sessionData?.session.ownerId === user?.id;
 
   // Fetch collaboration requests
-  const { data: collaborationRequests = [], refetch: refetchRequests } =
-    useQuery<CollaborationRequest[]>({
-      queryKey: ["/api/sessions", sessionId, "collaboration-requests"],
-      queryFn: async () => {
-        const response = await apiRequest(
-          "GET",
-          `/api/sessions/${sessionId}/collaboration-requests?status=pending`
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch collaboration requests");
+  const { data: allRequests = [], refetch: refetchRequests } = useQuery<
+    CollaborationRequest[]
+  >({
+    queryKey: ["/api/sessions", sessionId, "collaboration-requests"],
+    queryFn: async () => {
+      const response = await apiRequest(
+        "GET",
+        `/api/sessions/${sessionId}/collaboration-requests`
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch collaboration requests");
+      }
+      return response.json();
+    },
+    enabled: !!isSessionOwner && !!sessionId,
+  });
+
+  // Filter to only show pending requests
+  const collaborationRequests = allRequests.filter(
+    req => req.status === "pending"
+  );
+
+  // Listen for new collaboration requests via WebSocket
+  useEffect(() => {
+    if (!isSessionOwner || !sessionId) return;
+
+    // Listen for collaboration request notifications (new requests and updates)
+    const unsubscribeNotification = wsManager.on(
+      "notification",
+      (data: any) => {
+        const notification = data.notification;
+        const notificationSessionId = notification?.data?.sessionId;
+
+        if (notificationSessionId === sessionId) {
+          // Refetch requests when:
+          // 1. A new collaboration request arrives
+          // 2. A request is accepted/rejected (to remove it from pending list)
+          if (
+            notification?.type === "collaboration_request" ||
+            notification?.type === "request_accepted" ||
+            notification?.type === "request_rejected"
+          ) {
+            refetchRequests();
+          }
         }
-        return response.json();
-      },
-      enabled: !!isSessionOwner && !!sessionId,
+      }
+    );
+
+    // Also listen for direct collaboration_request_sent event (if server sends it)
+    const unsubscribeRequest = wsManager.on("new_collaboration_request", () => {
+      refetchRequests();
     });
+
+    return () => {
+      unsubscribeNotification();
+      unsubscribeRequest();
+    };
+  }, [isSessionOwner, sessionId, refetchRequests]);
 
   // Handle request response (accept/reject)
   const handleRequestResponse = async (
@@ -95,8 +138,8 @@ export function CollaborationPanel({
           description: `The collaboration request has been ${status}.`,
         });
 
-        // Refetch the collaboration requests
-        refetchRequests();
+        // Refetch the collaboration requests to remove accepted/rejected ones
+        await refetchRequests();
       }
     } catch (error) {
       toast({
