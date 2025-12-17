@@ -8,6 +8,7 @@ import {
   useSessions,
   useCreateSession,
   useDeleteSession,
+  useCollaborationSessions,
 } from "@/hooks/use-sessions";
 import { wsManager } from "@/lib/websocket";
 import {
@@ -36,6 +37,7 @@ export default function HomePage() {
 
   // Queries and mutations
   const { data: sessions, isLoading } = useSessions(true);
+  const { data: collaborationSessions } = useCollaborationSessions();
   const createSessionMutation = useCreateSession();
   const deleteSessionMutation = useDeleteSession();
 
@@ -131,9 +133,30 @@ export default function HomePage() {
                   key={session.id}
                   session={session}
                   onDelete={handleDeleteSession}
+                  showDelete={true}
                 />
               ))}
             </div>
+          )}
+
+          {/* Collaboration Projects Section - Only show if there are collaboration sessions */}
+          {collaborationSessions && collaborationSessions.length > 0 && (
+            <>
+              <div className="flex items-center justify-between mb-6 mt-12">
+                <h2 className="text-2xl font-bold text-foreground">
+                  Collaboration Projects
+                </h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {collaborationSessions.map(session => (
+                  <ProjectCard
+                    key={session.id}
+                    session={session}
+                    showDelete={false}
+                  />
+                ))}
+              </div>
+            </>
           )}
         </div>
       </main>

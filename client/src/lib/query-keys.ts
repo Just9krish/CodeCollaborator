@@ -12,6 +12,7 @@ export const queryKeys = {
   sessions: {
     all: ["/api/sessions"] as const,
     mine: () => ["/api/sessions", { mine: true }] as const,
+    collaborations: () => ["/api/sessions", { collaborations: true }] as const,
     detail: (id: string) => ["/api/sessions", id] as const,
   },
 

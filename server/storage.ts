@@ -22,7 +22,7 @@ import {
   type InsertNotification,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, ne } from "drizzle-orm";
 import session, { Store } from "express-session";
 import createMemoryStore from "memorystore";
 
@@ -70,6 +70,30 @@ export class DBStorage implements IStorage {
         .where(eq(sessions.ownerId, ownerId));
     }
     return await db.select().from(sessions);
+  }
+
+  // Get sessions where user is a participant but not the owner
+  async getCollaborationSessions(userId: string): Promise<Session[]> {
+    const result = await db
+      .select({
+        id: sessions.id,
+        name: sessions.name,
+        ownerId: sessions.ownerId,
+        language: sessions.language,
+        isPublic: sessions.isPublic,
+        createdAt: sessions.createdAt,
+        updatedAt: sessions.updatedAt,
+      })
+      .from(sessionParticipants)
+      .innerJoin(sessions, eq(sessionParticipants.sessionId, sessions.id))
+      .where(
+        and(
+          eq(sessionParticipants.userId, userId),
+          ne(sessions.ownerId, userId)
+        )
+      );
+
+    return result;
   }
 
   async createSession(session: InsertSession): Promise<Session> {

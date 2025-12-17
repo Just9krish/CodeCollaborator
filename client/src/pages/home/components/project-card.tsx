@@ -14,7 +14,8 @@ import type { Session } from "@shared/schema";
 
 interface ProjectCardProps {
   session: Session;
-  onDelete: (sessionId: string) => void;
+  onDelete?: (sessionId: string) => void;
+  showDelete?: boolean;
 }
 
 function formatDate(date: Date) {
@@ -25,7 +26,11 @@ function formatDate(date: Date) {
   });
 }
 
-export function ProjectCard({ session, onDelete }: ProjectCardProps) {
+export function ProjectCard({
+  session,
+  onDelete,
+  showDelete = true,
+}: ProjectCardProps) {
   const langIcon = getLanguageIcon(session.language);
 
   return (
@@ -64,18 +69,20 @@ export function ProjectCard({ session, onDelete }: ProjectCardProps) {
                 </div>
               )}
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-destructive hover:text-destructive/80 hover:bg-destructive/10"
-              onClick={e => {
-                e.preventDefault();
-                e.stopPropagation();
-                onDelete(session.id);
-              }}
-            >
-              <i className="ri-delete-bin-line"></i>
-            </Button>
+            {showDelete && onDelete && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-destructive hover:text-destructive/80 hover:bg-destructive/10"
+                onClick={e => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onDelete(session.id);
+                }}
+              >
+                <i className="ri-delete-bin-line"></i>
+              </Button>
+            )}
           </div>
         </CardFooter>
       </Card>

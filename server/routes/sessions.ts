@@ -6,13 +6,20 @@ import type { BroadcastFunction } from "./types";
 export function createSessionRoutes(broadcastToSession: BroadcastFunction) {
   const router = Router();
 
-  // Get all sessions (optionally filtered by owner)
+  // Get all sessions (optionally filtered by owner or collaborations)
   router.get("/", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
     try {
+      // Check if requesting collaboration sessions
+      if (req.query.collaborations === "true") {
+        const sessions = await storage.getCollaborationSessions(req.user!.id);
+        return res.status(200).json(sessions);
+      }
+
+      // Otherwise, get sessions by owner
       const ownerId = req.query.mine === "true" ? req.user!.id : undefined;
       const sessions = await storage.getSessions(ownerId);
       return res.status(200).json(sessions);

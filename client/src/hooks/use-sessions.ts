@@ -18,6 +18,16 @@ export function useSessions(mine = false) {
 }
 
 /**
+ * Hook to fetch collaboration sessions (where user is participant but not owner)
+ */
+export function useCollaborationSessions() {
+  return useQuery({
+    queryKey: queryKeys.sessions.collaborations(),
+    queryFn: () => sessionsApi.getCollaborations(),
+  });
+}
+
+/**
  * Hook to fetch a specific session by ID
  */
 export function useSession(id: string | null) {

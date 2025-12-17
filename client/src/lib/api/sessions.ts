@@ -31,6 +31,17 @@ export const sessionsApi = {
   },
 
   /**
+   * Get sessions where user is a collaborator (participant but not owner)
+   */
+  async getCollaborations(): Promise<Session[]> {
+    const res = await fetch("/api/sessions?collaborations=true", {
+      credentials: "include",
+    });
+    if (!res.ok) throw new Error("Failed to fetch collaboration sessions");
+    return res.json();
+  },
+
+  /**
    * Get a specific session by ID
    */
   async getById(id: string): Promise<SessionResponse> {
